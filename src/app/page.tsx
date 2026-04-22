@@ -533,22 +533,23 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [startupsRes, featuredRes, statsRes, categoriesRes] = await Promise.all([
-          fetch('/api/startups?limit=12&sort=popular'),
-          fetch('/api/startups?featured=true&limit=4'),
-          fetch('/api/stats'),
-          fetch('/api/categories'),
+        const [startupsRes, featuredRes, statsRes, categoriesRes] = await Promise.allSettled([
+          fetch('/api/startups?limit=12&sort=popular').then(r => r.json()),
+          fetch('/api/startups?featured=true&limit=4').then(r => r.json()),
+          fetch('/api/stats').then(r => r.json()),
+          fetch('/api/categories').then(r => r.json()),
         ])
-        const startupsData = await startupsRes.json()
-        const featuredData = await featuredRes.json()
-        const statsData = await statsRes.json()
-        const categoriesData = await categoriesRes.json()
 
-        setStartups(startupsData.startups || [])
+        const startupsData = startupsRes.status === 'fulfilled' ? startupsRes.value : {}
+        const featuredData = featuredRes.status === 'fulfilled' ? featuredRes.value : {}
+        const statsData = statsRes.status === 'fulfilled' ? statsRes.value : null
+        const categoriesData = categoriesRes.status === 'fulfilled' ? categoriesRes.value : {}
+
+        setStartups(Array.isArray(startupsData.startups) ? startupsData.startups : [])
         setTotalPages(startupsData.totalPages || 1)
-        setFeatured(featuredData.startups || [])
-        setStats(statsData)
-        setCategories(categoriesData.categories || [])
+        setFeatured(Array.isArray(featuredData.startups) ? featuredData.startups : [])
+        if (statsData && typeof statsData === 'object' && !statsData.error) setStats(statsData)
+        setCategories(Array.isArray(categoriesData.categories) ? categoriesData.categories : [])
       } catch (err) {
         console.error('Failed to load data:', err)
       } finally {
@@ -573,7 +574,7 @@ export default function Home() {
 
       const res = await fetch(`/api/startups?${params}`)
       const data = await res.json()
-      setStartups(data.startups || [])
+      setStartups(Array.isArray(data.startups) ? data.startups : [])
       setTotalPages(data.totalPages || 1)
       setPage(newPage)
     } catch {
@@ -608,8 +609,10 @@ export default function Home() {
         })
       }
       // Update local state
-      setStartups(prev => prev.map(s => s.slug === slug ? { ...s, upvotes: data.upvotes } : s))
-      setFeatured(prev => prev.map(s => s.slug === slug ? { ...s, upvotes: data.upvotes } : s))
+      if (typeof data.upvotes === 'number') {
+        setStartups(prev => prev.map(s => s.slug === slug ? { ...s, upvotes: data.upvotes } : s))
+        setFeatured(prev => prev.map(s => s.slug === slug ? { ...s, upvotes: data.upvotes } : s))
+      }
     } catch {
       toast.error('Failed to vote')
     }

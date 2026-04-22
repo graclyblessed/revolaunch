@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { fallbackStartups, fallbackPerks } from '@/lib/fallback-data'
 
 export async function GET(
   request: Request,
@@ -7,19 +8,28 @@ export async function GET(
 ) {
   try {
     const { slug } = await params
-    const startup = await db.startup.findUnique({
+
+    // Try database first
+    const dbStartup = await db.startup.findUnique({
       where: { slug },
-      include: {
-        _count: { select: { votes: true, perks: true } },
-        perks: true,
+      include: { _count: { select: { votes: true, perks: true } }, perks: true },
+    }).catch(() => null)
+
+    if (dbStartup) return NextResponse.json({ startup: dbStartup })
+
+    // Fallback: use static data
+    const startup = fallbackStartups.find(s => s.slug === slug)
+    if (!startup) return NextResponse.json({ error: 'Startup not found' }, { status: 404 })
+
+    const perks = fallbackPerks[slug] || []
+
+    return NextResponse.json({
+      startup: {
+        ...startup,
+        perks,
+        _count: { votes: startup.upvotes, perks: perks.length },
       },
     })
-
-    if (!startup) {
-      return NextResponse.json({ error: 'Startup not found' }, { status: 404 })
-    }
-
-    return NextResponse.json({ startup })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch startup' }, { status: 500 })
   }

@@ -286,10 +286,10 @@ export default function Home() {
         )}
 
         {/* =============================================
-            Trending Startups Section
+            Trending Startups + Right Sidebar
             ============================================= */}
         <section id="startups" className="py-16 sm:py-20">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Section heading */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
@@ -313,6 +313,10 @@ export default function Home() {
                 Discover the latest and most popular startups in our community
               </p>
             </motion.div>
+
+            <div className="flex gap-8">
+            {/* Main content column */}
+            <div className="flex-1 min-w-0">
 
             {/* Toolbar — search + sort, clean row */}
             <div className="flex items-center gap-3 mb-6">
@@ -482,43 +486,30 @@ export default function Home() {
                 </p>
               </div>
             )}
-          </div>
-        </section>
-
-        {/* =============================================
-            Sponsors Section
-            ============================================= */}
-        <section className="py-16 sm:py-20 border-t border-border">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
-              className="text-center"
-            >
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-8">
-                Trusted by
-              </p>
-
-              {/* Empty sponsor slots — placeholder */}
-              <div className="flex items-center justify-center gap-6 sm:gap-10 md:gap-12">
-                {[...Array(5)].map((_, i) => (
+            </div>
+            {/* Floating Right Sidebar — Sponsors */}
+            <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
+              <div className="sticky top-20 space-y-4">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  Sponsors
+                </p>
+                {[...Array(4)].map((_, i) => (
                   <div
                     key={i}
-                    className="w-24 h-12 sm:w-28 sm:h-14 rounded-xl border-2 border-dashed border-border flex items-center justify-center"
+                    className="w-full aspect-[3/1] rounded-xl border-2 border-dashed border-border flex items-center justify-center hover:border-orange-500/30 transition-colors"
                   >
-                    <span className="text-xs text-muted-foreground/40 font-medium">Logo</span>
+                    <span className="text-[11px] text-muted-foreground/40 font-medium">Your Logo</span>
                   </div>
                 ))}
+                <p className="text-[11px] text-muted-foreground/50 leading-relaxed">
+                  Advertise to thousands of founders &amp; investors.{' '}
+                  <a href="mailto:hello@revolaunch.net" className="text-orange-500 hover:text-orange-600 transition-colors font-medium">
+                    Contact us
+                  </a>
+                </p>
               </div>
-              <p className="mt-6 text-xs text-muted-foreground/60">
-                Interested in sponsoring?{' '}
-                <a href="mailto:hello@revolaunch.net" className="text-orange-500 hover:text-orange-600 transition-colors font-medium">
-                  Get in touch
-                </a>
-              </p>
-            </motion.div>
+            </aside>
+            </div>
           </div>
         </section>
 

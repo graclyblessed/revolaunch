@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Star, Trophy } from 'lucide-react'
 import type { Startup } from '@/lib/fallback-data'
 import { getCategoryIcon, getCategoryColor } from '@/lib/fallback-data'
+import StartupLogo from '@/components/StartupLogo'
 
 interface WeeklyLeaderboardProps {
   winners: (Startup & { rank: number; medal: string; points: number })[]
@@ -28,8 +29,6 @@ export default function WeeklyLeaderboard({ winners }: WeeklyLeaderboardProps) {
       <div className="divide-y divide-border">
         {winners.map((winner, index) => {
           const medal = medals[winner.medal]
-          const logoColor = winner.logoColor || '#3B82F6'
-          const initial = winner.name.charAt(0).toUpperCase()
 
           return (
             <motion.div
@@ -48,14 +47,12 @@ export default function WeeklyLeaderboard({ winners }: WeeklyLeaderboardProps) {
                 </div>
 
                 {/* Logo */}
-                <div
-                  className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: logoColor + '22' }}
-                >
-                  <span className="text-xs font-bold" style={{ color: logoColor }}>
-                    {initial}
-                  </span>
-                </div>
+                <StartupLogo
+                  name={winner.name}
+                  logo={winner.logo}
+                  logoColor={winner.logoColor}
+                  size="sm"
+                />
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">

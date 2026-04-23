@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import Header from '@/components/Header'
+import StartupLogo from '@/components/StartupLogo'
 import {
   fallbackStartups, fallbackStats,
   fallbackCategories, getCategoryIcon,
@@ -228,14 +229,12 @@ export default function Home() {
 
                       {/* Logo + Name */}
                       <div className="flex items-center gap-3 mb-3">
-                        <div
-                          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: (startup.logoColor || '#F97316') + '18' }}
-                        >
-                          <span className="text-lg font-bold" style={{ color: startup.logoColor || '#F97316' }}>
-                            {startup.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
+                        <StartupLogo
+                          name={startup.name}
+                          logo={startup.logo}
+                          logoColor={startup.logoColor}
+                          size="lg"
+                        />
                         <div className="min-w-0">
                           <h3 className="font-bold text-base text-foreground truncate group-hover:text-orange-500 transition-colors">
                             {startup.name}
@@ -422,14 +421,12 @@ export default function Home() {
                     >
                       <div className="flex items-start gap-4">
                         {/* Logo */}
-                        <div
-                          className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: (startup.logoColor || '#F97316') + '18' }}
-                        >
-                          <span className="text-sm font-bold" style={{ color: startup.logoColor || '#F97316' }}>
-                            {startup.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
+                        <StartupLogo
+                          name={startup.name}
+                          logo={startup.logo}
+                          logoColor={startup.logoColor}
+                          size="md"
+                        />
 
                         {/* Content */}
                         <div className="flex-1 min-w-0">

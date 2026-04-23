@@ -5,6 +5,7 @@ import { Star, MessageSquare, ExternalLink, Trophy, Sparkles } from 'lucide-reac
 import { Badge } from '@/components/ui/badge'
 import type { Startup } from '@/lib/fallback-data'
 import { getCategoryIcon, getCategoryColor, getStageColor } from '@/lib/fallback-data'
+import StartupLogo from '@/components/StartupLogo'
 
 interface StartupCardProps {
   startup: Startup
@@ -15,8 +16,6 @@ interface StartupCardProps {
 }
 
 export default function StartupCard({ startup, rank, onVote, isVoted, compact }: StartupCardProps) {
-  const initial = startup.name.charAt(0).toUpperCase()
-  const logoColor = startup.logoColor || '#3B82F6'
 
   const medals: Record<number, { emoji: string; bg: string }> = {
     1: { emoji: '🥇', bg: 'bg-yellow-500/20' },
@@ -62,14 +61,12 @@ export default function StartupCard({ startup, rank, onVote, isVoted, compact }:
           </div>
 
           {/* Logo */}
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ backgroundColor: logoColor + '22' }}
-          >
-            <span className="text-sm font-bold" style={{ color: logoColor }}>
-              {initial}
-            </span>
-          </div>
+          <StartupLogo
+            name={startup.name}
+            logo={startup.logo}
+            logoColor={startup.logoColor}
+            size="md"
+          />
 
           {/* Content */}
           <div className="flex-1 min-w-0">
@@ -117,8 +114,6 @@ export default function StartupCard({ startup, rank, onVote, isVoted, compact }:
 }
 
 export function StartupCardFull({ startup }: { startup: Startup }) {
-  const initial = startup.name.charAt(0).toUpperCase()
-  const logoColor = startup.logoColor || '#3B82F6'
 
   return (
     <motion.div
@@ -131,14 +126,12 @@ export function StartupCardFull({ startup }: { startup: Startup }) {
       <div className="p-5">
         <div className="flex items-start gap-4">
           {/* Logo */}
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-            style={{ backgroundColor: logoColor + '22' }}
-          >
-            <span className="text-lg font-bold" style={{ color: logoColor }}>
-              {initial}
-            </span>
-          </div>
+          <StartupLogo
+            name={startup.name}
+            logo={startup.logo}
+            logoColor={startup.logoColor}
+            size="lg"
+          />
 
           {/* Content */}
           <div className="flex-1 min-w-0">

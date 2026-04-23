@@ -84,7 +84,7 @@ export const fallbackStartups: Startup[] = [
     slug: 'dreamina',
     tagline: 'All-in-one AI creative suite for all your artistic work',
     description: 'Dreamina is an AI platform by ByteDance for creating stunning posters, flyers, and logos. It leverages advanced generative AI to help designers and non-designers create professional visual content effortlessly.',
-    logo: 'https://logo.clearbit.com/capcut.com',
+    logo: 'https://logo.clearbit.com/dreamina.capcut.com',
     website: 'https://dreamina.capcut.com',
     twitter: null,
     linkedin: null,

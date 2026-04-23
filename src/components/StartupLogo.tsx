@@ -30,17 +30,13 @@ const imgSizes = {
   lg: 32,
 }
 
-/** Extract root domain from a URL string */
+/** Extract domain from a URL, keeping subdomains (e.g. dreamina.capcut.com stays as-is).
+ *  Only strips 'www.' prefix. */
 export function getDomain(website: string): string | null {
   if (!website) return null
   try {
     const url = new URL(website)
-    const domain = url.hostname.replace(/^www\./, '')
-    const parts = domain.split('.')
-    if (parts.length > 2) {
-      return parts.slice(-2).join('.')
-    }
-    return domain
+    return url.hostname.replace(/^www\./, '')
   } catch {
     return null
   }

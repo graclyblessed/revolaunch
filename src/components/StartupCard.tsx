@@ -64,6 +64,7 @@ export default function StartupCard({ startup, rank, onVote, isVoted, compact }:
           <StartupLogo
             name={startup.name}
             logo={startup.logo}
+            website={startup.website}
             logoColor={startup.logoColor}
             size="md"
           />
@@ -129,6 +130,7 @@ export function StartupCardFull({ startup }: { startup: Startup }) {
           <StartupLogo
             name={startup.name}
             logo={startup.logo}
+            website={startup.website}
             logoColor={startup.logoColor}
             size="lg"
           />

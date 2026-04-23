@@ -232,6 +232,7 @@ export default function Home() {
                         <StartupLogo
                           name={startup.name}
                           logo={startup.logo}
+                          website={startup.website}
                           logoColor={startup.logoColor}
                           size="lg"
                         />
@@ -424,6 +425,7 @@ export default function Home() {
                         <StartupLogo
                           name={startup.name}
                           logo={startup.logo}
+                          website={startup.website}
                           logoColor={startup.logoColor}
                           size="md"
                         />

@@ -50,6 +50,7 @@ export default function WeeklyLeaderboard({ winners }: WeeklyLeaderboardProps) {
                 <StartupLogo
                   name={winner.name}
                   logo={winner.logo}
+                  website={winner.website}
                   logoColor={winner.logoColor}
                   size="sm"
                 />

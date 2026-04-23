@@ -54,31 +54,31 @@
   --card-foreground: #0f172a;
   --popover: #ffffff;
   --popover-foreground: #0f172a;
-  --primary: #3B82F6;
+  --primary: #F97316;
   --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
+  --secondary: #FFF7ED;
+  --secondary-foreground: #9A3412;
+  --muted: #FFF7ED;
   --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
+  --accent: #FFF7ED;
+  --accent-foreground: #9A3412;
   --destructive: #ef4444;
-  --border: #e2e8f0;
-  --input: #cbd5e1;
-  --ring: #3B82F6;
-  --chart-1: #3B82F6;
+  --border: #FDBA74;
+  --input: #FED7AA;
+  --ring: #F97316;
+  --chart-1: #F97316;
   --chart-2: #22C55E;
   --chart-3: #F59E0B;
   --chart-4: #A855F7;
   --chart-5: #EC4899;
-  --sidebar: #f8fafc;
-  --sidebar-foreground: #0f172a;
-  --sidebar-primary: #3B82F6;
+  --sidebar: #FFF7ED;
+  --sidebar-foreground: #9A3412;
+  --sidebar-primary: #F97316;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f1f5f9;
-  --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #3B82F6;
+  --sidebar-accent: #FFF7ED;
+  --sidebar-accent-foreground: #9A3412;
+  --sidebar-border: #FDBA74;
+  --sidebar-ring: #F97316;
 }
 
 /* ============================================
@@ -91,7 +91,7 @@
   --card-foreground: #ffffff;
   --popover: #111111;
   --popover-foreground: #ffffff;
-  --primary: #3B82F6;
+  --primary: #F97316;
   --primary-foreground: #ffffff;
   --secondary: #1a1a1a;
   --secondary-foreground: #ffffff;
@@ -102,20 +102,20 @@
   --destructive: #ef4444;
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.12);
-  --ring: #3B82F6;
-  --chart-1: #3B82F6;
+  --ring: #F97316;
+  --chart-1: #F97316;
   --chart-2: #22C55E;
   --chart-3: #F59E0B;
   --chart-4: #A855F7;
   --chart-5: #EC4899;
   --sidebar: #0a0a0a;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #3B82F6;
+  --sidebar-primary: #F97316;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #1a1a1a;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #3B82F6;
+  --sidebar-ring: #F97316;
 }
 
 @layer base {
@@ -147,7 +147,7 @@
 
 /* Selection */
 ::selection {
-  background: rgba(59, 130, 246, 0.3);
+  background: rgba(249, 115, 22, 0.3);
   color: white;
 }
 
@@ -212,14 +212,14 @@
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #3B82F6, #8B5CF6, #EC4899);
+  background: linear-gradient(135deg, #F97316, #F59E0B, #EC4899);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .gradient-text-blue {
-  background: linear-gradient(135deg, #3B82F6, #60A5FA);
+  background: linear-gradient(135deg, #F97316, #FB923C);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -289,25 +289,25 @@
 
 /* Hero gradient overlay */
 .hero-gradient {
-  background: linear-gradient(to bottom right, rgba(59, 130, 246, 0.06), transparent, rgba(168, 85, 247, 0.06));
+  background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.06), transparent, rgba(245, 158, 11, 0.06));
 }
 .dark .hero-gradient {
-  background: linear-gradient(to bottom right, rgba(59, 130, 246, 0.04), transparent, rgba(168, 85, 247, 0.04));
+  background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.04), transparent, rgba(245, 158, 11, 0.04));
 }
 
 /* Glow blobs */
 .glow-blob-blue {
-  background: rgba(59, 130, 246, 0.08);
+  background: rgba(249, 115, 22, 0.08);
 }
 .dark .glow-blob-blue {
-  background: rgba(59, 130, 246, 0.06);
+  background: rgba(249, 115, 22, 0.06);
 }
 
 .glow-blob-purple {
-  background: rgba(168, 85, 247, 0.06);
+  background: rgba(245, 158, 11, 0.06);
 }
 .dark .glow-blob-purple {
-  background: rgba(168, 85, 247, 0.04);
+  background: rgba(245, 158, 11, 0.04);
 }
 
 /* Popover bg (for dropdowns) */
@@ -337,13 +337,13 @@
 }
 
 .input-bg-focus:focus {
-  border-color: rgba(59, 130, 246, 0.5);
+  border-color: rgba(249, 115, 22, 0.5);
 }
 
-/* Card active/blue highlight */
+/* Card active/orange highlight */
 .card-active-bg {
-  background-color: rgba(59, 130, 246, 0.05);
+  background-color: rgba(249, 115, 22, 0.05);
 }
 .dark .card-active-bg {
-  background-color: rgba(59, 130, 246, 0.05);
+  background-color: rgba(249, 115, 22, 0.05);
 }

@@ -155,7 +155,7 @@ export default function Home() {
 
               <div className="flex items-center justify-center gap-3">
                 <Link href="/submit">
-                  <Button size="lg" className="bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl h-11 px-6 shadow-lg shadow-blue-500/20">
+                  <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-xl h-11 px-6 shadow-lg shadow-orange-500/20">
                     <Rocket className="w-4 h-4 mr-2" />
                     List Your Startup
                   </Button>

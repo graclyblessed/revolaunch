@@ -30,7 +30,7 @@ export default function StartupCard({ startup, rank, onVote, isVoted, compact }:
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
-      className="group rounded-xl border subtle-border surface hover:border-blue-500/30 transition-all duration-200 overflow-hidden"
+      className="group rounded-xl border subtle-border surface hover:border-orange-500/30 transition-all duration-200 overflow-hidden"
     >
       <div className="p-4">
         <div className="flex items-start gap-3">
@@ -44,16 +44,16 @@ export default function StartupCard({ startup, rank, onVote, isVoted, compact }:
               <button
                 onClick={() => onVote(startup.slug)}
                 className={`flex flex-col items-center gap-0.5 transition-all duration-200 ${
-                  isVoted ? 'text-blue-500' : 'text-muted-foreground hover:text-blue-500'
+                  isVoted ? 'text-orange-500' : 'text-muted-foreground hover:text-orange-500'
                 }`}
               >
-                <Star className={`w-5 h-5 ${isVoted ? 'fill-blue-500' : ''}`} />
+                <Star className={`w-5 h-5 ${isVoted ? 'fill-orange-500' : ''}`} />
                 <span className="text-xs font-semibold tabular-nums">{startup.upvotes}</span>
               </button>
             ) : (
               <button
                 onClick={() => onVote?.(startup.slug)}
-                className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-blue-500 transition-colors"
+                className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-orange-500 transition-colors"
               >
                 <Star className="w-5 h-5" />
                 <span className="text-xs font-semibold tabular-nums">{startup.upvotes}</span>
@@ -74,7 +74,7 @@ export default function StartupCard({ startup, rank, onVote, isVoted, compact }:
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-sm text-foreground truncate group-hover:text-blue-500 transition-colors">
+              <h3 className="font-semibold text-sm text-foreground truncate group-hover:text-orange-500 transition-colors">
                 {startup.name}
               </h3>
               {startup.featured && (
@@ -126,7 +126,7 @@ export function StartupCardFull({ startup }: { startup: Startup }) {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
-      className="group rounded-xl border subtle-border surface hover:border-blue-500/30 transition-all duration-200 overflow-hidden"
+      className="group rounded-xl border subtle-border surface hover:border-orange-500/30 transition-all duration-200 overflow-hidden"
     >
       <div className="p-5">
         <div className="flex items-start gap-4">
@@ -143,7 +143,7 @@ export function StartupCardFull({ startup }: { startup: Startup }) {
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-foreground truncate group-hover:text-blue-500 transition-colors">
+              <h3 className="font-semibold text-foreground truncate group-hover:text-orange-500 transition-colors">
                 {startup.name}
               </h3>
               {startup.featured && (
@@ -184,7 +184,7 @@ export function StartupCardFull({ startup }: { startup: Startup }) {
                 href={startup.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-blue-500 transition-colors ml-auto"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-orange-500 transition-colors ml-auto"
               >
                 Visit <ExternalLink className="w-3 h-3" />
               </a>

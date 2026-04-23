@@ -37,10 +37,10 @@ export default function Header() {
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
               <Rocket className="w-4 h-4 text-white" />
             </div>
-            <Link href="/" className="text-lg font-semibold text-foreground hover:text-blue-500 transition-colors">
+            <Link href="/" className="text-lg font-semibold text-foreground hover:text-orange-500 transition-colors">
               revolaunch.net
             </Link>
           </div>
@@ -130,7 +130,7 @@ export default function Header() {
           <div className="flex items-center gap-1.5">
             <ThemeToggle />
             <Link href="/submit" className="hidden sm:block">
-              <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white h-8 text-sm font-medium rounded-lg px-4">
+              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white h-8 text-sm font-medium rounded-lg px-4">
                 <Rocket className="w-3.5 h-3.5 mr-1.5" />
                 Launch
               </Button>
@@ -201,7 +201,7 @@ export default function Header() {
               </Link>
               <div className="flex gap-2 pt-2 px-3">
                 <Link href="/submit" className="flex-1">
-                  <Button size="sm" className="w-full bg-blue-500 hover:bg-blue-600 text-white h-9 text-sm font-medium rounded-lg">
+                  <Button size="sm" className="w-full bg-orange-500 hover:bg-orange-600 text-white h-9 text-sm font-medium rounded-lg">
                     Launch
                   </Button>
                 </Link>

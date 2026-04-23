@@ -31,16 +31,6 @@ function getSessionId() {
   return sid
 }
 
-// Sponsor data for the sponsors section
-const sponsors = [
-  { name: 'Vercel', initials: '▲', color: '#000000', darkColor: '#ffffff' },
-  { name: 'Stripe', initials: 'S', color: '#635BFF', darkColor: '#635BFF' },
-  { name: 'Notion', initials: 'N', color: '#000000', darkColor: '#ffffff' },
-  { name: 'Linear', initials: 'L', color: '#5E6AD2', darkColor: '#5E6AD2' },
-  { name: 'Figma', initials: 'F', color: '#F24E1E', darkColor: '#F24E1E' },
-  { name: 'Supabase', initials: '⬡', color: '#3FCF8E', darkColor: '#3FCF8E' },
-]
-
 export default function Home() {
   const [startups, setStartups] = useState<Startup[]>([])
   const [stats, setStats] = useState(fallbackStats)
@@ -511,28 +501,23 @@ export default function Home() {
                 Trusted by
               </p>
 
-              {/* Sponsor logos row */}
-              <div className="flex items-center justify-center gap-8 sm:gap-14 md:gap-16 flex-wrap">
-                {sponsors.map((sponsor) => (
+              {/* Empty sponsor slots — placeholder */}
+              <div className="flex items-center justify-center gap-6 sm:gap-10 md:gap-12">
+                {[...Array(5)].map((_, i) => (
                   <div
-                    key={sponsor.name}
-                    className="group flex flex-col items-center gap-2 transition-opacity duration-300 opacity-40 hover:opacity-100 dark:opacity-20 dark:hover:opacity-60"
+                    key={i}
+                    className="w-24 h-12 sm:w-28 sm:h-14 rounded-xl border-2 border-dashed border-border flex items-center justify-center"
                   >
-                    {/* Rounded square with initials */}
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold bg-muted"
-                      style={{
-                        color: 'var(--foreground)',
-                      }}
-                    >
-                      <span className="text-xl">{sponsor.initials}</span>
-                    </div>
-                    <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                      {sponsor.name}
-                    </span>
+                    <span className="text-xs text-muted-foreground/40 font-medium">Logo</span>
                   </div>
                 ))}
               </div>
+              <p className="mt-6 text-xs text-muted-foreground/60">
+                Interested in sponsoring?{' '}
+                <a href="mailto:hello@revolaunch.net" className="text-orange-500 hover:text-orange-600 transition-colors font-medium">
+                  Get in touch
+                </a>
+              </p>
             </motion.div>
           </div>
         </section>

@@ -11,21 +11,21 @@ interface WeeklyLeaderboardProps {
 
 export default function WeeklyLeaderboard({ winners }: WeeklyLeaderboardProps) {
   const medals: Record<string, { emoji: string; color: string; glow: string }> = {
-    gold: { emoji: '🥇', color: 'text-yellow-400', glow: 'shadow-yellow-500/20' },
-    silver: { emoji: '🥈', color: 'text-gray-300', glow: 'shadow-gray-400/20' },
-    bronze: { emoji: '🥉', color: 'text-orange-400', glow: 'shadow-orange-600/20' },
+    gold: { emoji: '🥇', color: 'text-yellow-500', glow: 'shadow-yellow-500/20' },
+    silver: { emoji: '🥈', color: 'text-gray-400', glow: 'shadow-gray-400/20' },
+    bronze: { emoji: '🥉', color: 'text-orange-500', glow: 'shadow-orange-600/20' },
   }
 
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-[#0a0a0a] overflow-hidden">
-      <div className="p-4 border-b border-white/[0.06]">
+    <div className="rounded-xl border subtle-border surface overflow-hidden">
+      <div className="p-4 border-b subtle-border">
         <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-amber-400" />
-          <h2 className="text-sm font-semibold text-white">LAST WEEK</h2>
+          <Trophy className="w-4 h-4 text-amber-500" />
+          <h2 className="text-sm font-semibold text-foreground">LAST WEEK</h2>
         </div>
-        <p className="text-[11px] text-gray-500 mt-0.5">Top ranked startups by community votes</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">Top ranked startups by community votes</p>
       </div>
-      <div className="divide-y divide-white/[0.04]">
+      <div className="divide-y divide-border">
         {winners.map((winner, index) => {
           const medal = medals[winner.medal]
           const logoColor = winner.logoColor || '#3B82F6'
@@ -37,12 +37,12 @@ export default function WeeklyLeaderboard({ winners }: WeeklyLeaderboardProps) {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
-              className={`p-3 hover:bg-white/[0.02] transition-colors ${index === 0 ? 'bg-yellow-500/[0.03]' : ''}`}
+              className={`p-3 surface-hover transition-colors ${index === 0 ? 'bg-yellow-500/[0.03]' : ''}`}
             >
               <div className="flex items-start gap-3">
                 {/* Medal */}
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0 ${
-                  index === 0 ? 'bg-yellow-500/20 shadow-lg ' + medal.glow : 'bg-white/[0.04]'
+                  index === 0 ? 'bg-yellow-500/20 shadow-lg ' + medal.glow : 'bg-muted'
                 }`}>
                   {medal.emoji}
                 </div>
@@ -59,10 +59,10 @@ export default function WeeklyLeaderboard({ winners }: WeeklyLeaderboardProps) {
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-white truncate">
+                  <h3 className="text-sm font-semibold text-foreground truncate">
                     {winner.name}
                   </h3>
-                  <p className="text-[11px] text-gray-500 line-clamp-1 mt-0.5">
+                  <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">
                     {winner.tagline}
                   </p>
                   <div className="flex flex-wrap items-center gap-1.5 mt-2">
@@ -70,7 +70,7 @@ export default function WeeklyLeaderboard({ winners }: WeeklyLeaderboardProps) {
                       {getCategoryIcon(winner.category)} {winner.category}
                     </span>
                     {winner.country && (
-                      <span className="text-[10px] text-gray-500">
+                      <span className="text-[10px] text-muted-foreground">
                         {winner.country.length > 12 ? winner.country.split(' ')[0] : winner.country}
                       </span>
                     )}
@@ -79,11 +79,11 @@ export default function WeeklyLeaderboard({ winners }: WeeklyLeaderboardProps) {
 
                 {/* Points */}
                 <div className="text-right shrink-0">
-                  <div className="flex items-center gap-1 text-amber-400">
-                    <Star className="w-3 h-3 fill-amber-400" />
+                  <div className="flex items-center gap-1 text-amber-500">
+                    <Star className="w-3 h-3 fill-amber-500" />
                     <span className="text-sm font-bold tabular-nums">{winner.points}</span>
                   </div>
-                  <span className="text-[10px] text-gray-500">points</span>
+                  <span className="text-[10px] text-muted-foreground">points</span>
                 </div>
               </div>
             </motion.div>
@@ -91,10 +91,10 @@ export default function WeeklyLeaderboard({ winners }: WeeklyLeaderboardProps) {
         })}
       </div>
 
-      <div className="p-3 border-t border-white/[0.06]">
+      <div className="p-3 border-t subtle-border">
         <a
           href="/community?type=weekly-board"
-          className="flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-blue-400 transition-colors"
+          className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-blue-500 transition-colors"
         >
           <Trophy className="w-3 h-3" />
           View full leaderboard

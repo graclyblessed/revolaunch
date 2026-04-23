@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
-  // Exclude Prisma from the bundle (not needed on Vercel with fallback data)
-  serverExternalPackages: ["@prisma/client"],
+  // Exclude Prisma from the serverless bundle
+  serverExternalPackages: ["@prisma/client", "prisma"],
 };
 
 export default nextConfig;

@@ -9,6 +9,7 @@ import {
   Calendar, PenSquare, LogIn, Menu, X, Globe
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import ThemeToggle from './ThemeToggle'
 
 const communityItems = [
   { name: 'MRR Board', icon: BarChart3, href: '/community?type=mrr-board' },
@@ -31,7 +32,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-black/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b subtle-border header-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
@@ -39,15 +40,14 @@ export default function Header() {
             <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
               <Rocket className="w-4 h-4 text-white" />
             </div>
-            <Link href="/" className="text-lg font-semibold text-white hover:text-blue-400 transition-colors">
+            <Link href="/" className="text-lg font-semibold text-foreground hover:text-blue-500 transition-colors">
               revolaunch.net
             </Link>
           </div>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {/* Startups - dropdown could go here */}
-            <Link href="/#startups" className="px-3 py-2 text-sm text-gray-300 hover:text-white transition-colors rounded-md hover:bg-white/[0.05]">
+            <Link href="/#startups" className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted">
               Startups
             </Link>
 
@@ -55,7 +55,7 @@ export default function Header() {
             <div className="relative">
               <button
                 onClick={() => { setCommunityOpen(!communityOpen); setGrowOpen(false) }}
-                className="flex items-center gap-1 px-3 py-2 text-sm text-gray-300 hover:text-white transition-colors rounded-md hover:bg-white/[0.05]"
+                className="flex items-center gap-1 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted"
               >
                 Community
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${communityOpen ? 'rotate-180' : ''}`} />
@@ -67,17 +67,17 @@ export default function Header() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 mt-1 w-56 rounded-xl border border-white/[0.08] bg-[#111] shadow-2xl shadow-black/50 py-1 z-50"
+                    className="absolute top-full left-0 mt-1 w-56 rounded-xl border subtle-border popover-bg shadow-2xl shadow-black/10 dark:shadow-black/50 py-1 z-50"
                     onMouseLeave={() => setCommunityOpen(false)}
                   >
                     {communityItems.map((item) => (
                       <Link
                         key={item.name}
                         href={item.href}
-                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/[0.05] transition-colors"
+                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                         onClick={() => setCommunityOpen(false)}
                       >
-                        <item.icon className="w-4 h-4 text-gray-500" />
+                        <item.icon className="w-4 h-4 text-muted-foreground" />
                         {item.name}
                       </Link>
                     ))}
@@ -90,7 +90,7 @@ export default function Header() {
             <div className="relative">
               <button
                 onClick={() => { setGrowOpen(!growOpen); setCommunityOpen(false) }}
-                className="flex items-center gap-1 px-3 py-2 text-sm text-gray-300 hover:text-white transition-colors rounded-md hover:bg-white/[0.05]"
+                className="flex items-center gap-1 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted"
               >
                 Grow
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${growOpen ? 'rotate-180' : ''}`} />
@@ -102,17 +102,17 @@ export default function Header() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 mt-1 w-48 rounded-xl border border-white/[0.08] bg-[#111] shadow-2xl shadow-black/50 py-1 z-50"
+                    className="absolute top-full left-0 mt-1 w-48 rounded-xl border subtle-border popover-bg shadow-2xl shadow-black/10 dark:shadow-black/50 py-1 z-50"
                     onMouseLeave={() => setGrowOpen(false)}
                   >
                     {growItems.map((item) => (
                       <Link
                         key={item.name}
                         href={item.href}
-                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/[0.05] transition-colors"
+                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                         onClick={() => setGrowOpen(false)}
                       >
-                        <item.icon className="w-4 h-4 text-gray-500" />
+                        <item.icon className="w-4 h-4 text-muted-foreground" />
                         {item.name}
                       </Link>
                     ))}
@@ -121,13 +121,14 @@ export default function Header() {
               </AnimatePresence>
             </div>
 
-            <Link href="/inside" className="px-3 py-2 text-sm text-gray-300 hover:text-white transition-colors rounded-md hover:bg-white/[0.05]">
+            <Link href="/inside" className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted">
               Inside
             </Link>
           </nav>
 
           {/* Right side */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <ThemeToggle />
             <Link href="/submit" className="hidden sm:block">
               <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white h-8 text-sm font-medium rounded-lg px-4">
                 <Rocket className="w-3.5 h-3.5 mr-1.5" />
@@ -135,7 +136,7 @@ export default function Header() {
               </Button>
             </Link>
             <Link href="/dashboard" className="hidden sm:block">
-              <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white h-8 text-sm rounded-lg px-3">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground h-8 text-sm rounded-lg px-3">
                 <LogIn className="w-3.5 h-3.5 mr-1.5" />
                 Login
               </Button>
@@ -143,7 +144,7 @@ export default function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden text-gray-300 hover:text-white h-8 w-8"
+              className="md:hidden text-muted-foreground hover:text-foreground h-8 w-8"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -158,19 +159,19 @@ export default function Header() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden pb-4 border-t border-white/[0.06] pt-3 space-y-1"
+              className="md:hidden pb-4 border-t subtle-border pt-3 space-y-1"
             >
-              <Link href="/#startups" className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-300 hover:text-white rounded-lg hover:bg-white/[0.05]" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/#startups" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
                 Startups
               </Link>
               <div className="px-3 py-2">
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Community</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Community</p>
                 <div className="space-y-0.5">
                   {communityItems.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/[0.05]"
+                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <item.icon className="w-4 h-4" />
@@ -180,13 +181,13 @@ export default function Header() {
                 </div>
               </div>
               <div className="px-3 py-2">
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Grow</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Grow</p>
                 <div className="space-y-0.5">
                   {growItems.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/[0.05]"
+                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <item.icon className="w-4 h-4" />
@@ -195,7 +196,7 @@ export default function Header() {
                   ))}
                 </div>
               </div>
-              <Link href="/inside" className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-300 hover:text-white rounded-lg hover:bg-white/[0.05]" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/inside" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
                 Inside
               </Link>
               <div className="flex gap-2 pt-2 px-3">
@@ -205,7 +206,7 @@ export default function Header() {
                   </Button>
                 </Link>
                 <Link href="/dashboard" className="flex-1">
-                  <Button variant="outline" size="sm" className="w-full border-white/10 text-gray-300 hover:text-white h-9 text-sm rounded-lg">
+                  <Button variant="outline" size="sm" className="w-full text-muted-foreground hover:text-foreground h-9 text-sm rounded-lg">
                     Login
                   </Button>
                 </Link>

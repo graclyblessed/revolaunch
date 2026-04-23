@@ -25,37 +25,37 @@ function LaunchConfirmationContent() {
     >
       <div className="max-w-lg w-full">
         {/* Email-style card */}
-        <div className="rounded-2xl border border-white/[0.08] bg-[#0a0a0a] overflow-hidden">
+        <div className="rounded-2xl border subtle-border surface overflow-hidden">
           {/* Header */}
-          <div className="px-6 pt-6 pb-4 border-b border-white/[0.06]">
+          <div className="px-6 pt-6 pb-4 border-b subtle-border">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
                 <Rocket className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-[10px] text-gray-600 uppercase tracking-wider">Where startups begin.</p>
-                <p className="text-sm font-medium text-white">Revolaunch</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Where startups begin.</p>
+                <p className="text-sm font-medium text-foreground">Revolaunch</p>
               </div>
             </div>
-            <h1 className="text-lg font-bold text-white">
+            <h1 className="text-lg font-bold text-foreground">
               Your listing for {domain} is live on Revolaunch, but not complete yet.
             </h1>
           </div>
 
           {/* Body */}
           <div className="px-6 py-5 space-y-4">
-            <div className="space-y-3 text-sm text-gray-300 leading-relaxed">
+            <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
               <p>Hi {founderName},</p>
               <p>
-                Your listing for <span className="text-blue-400 font-medium">{startupName}</span> is live on Revolaunch, but not complete yet.
+                Your listing for <span className="text-blue-500 font-medium">{startupName}</span> is live on Revolaunch, but not complete yet.
               </p>
               <p>
                 Finish it by adding photos, highlights, and links so visitors quickly understand what you do.
               </p>
-              <p className="text-gray-500 text-xs">
+              <p className="text-faint text-xs">
                 Complete your listing
               </p>
-              <p className="text-gray-500 text-xs">
+              <p className="text-faint text-xs">
                 It only takes about a minute.
               </p>
             </div>
@@ -72,41 +72,41 @@ function LaunchConfirmationContent() {
             </Button>
 
             {/* Stats preview */}
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 mt-4">
-              <p className="text-xs text-gray-500 mb-3">Your listing is ready to collect:</p>
+            <div className="rounded-xl border subtle-border bg-muted p-4 mt-4">
+              <p className="text-xs text-muted-foreground mb-3">Your listing is ready to collect:</p>
               <div className="grid grid-cols-3 gap-3">
                 <div className="text-center">
-                  <Star className="w-4 h-4 text-amber-400 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-white">0</p>
-                  <p className="text-[10px] text-gray-500">Stars</p>
+                  <Star className="w-4 h-4 text-amber-500 mx-auto mb-1" />
+                  <p className="text-lg font-bold text-foreground">0</p>
+                  <p className="text-[10px] text-muted-foreground">Stars</p>
                 </div>
                 <div className="text-center">
-                  <Rocket className="w-4 h-4 text-blue-400 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-white">#0</p>
-                  <p className="text-[10px] text-gray-500">Weekly Rank</p>
+                  <Rocket className="w-4 h-4 text-blue-500 mx-auto mb-1" />
+                  <p className="text-lg font-bold text-foreground">#0</p>
+                  <p className="text-[10px] text-muted-foreground">Weekly Rank</p>
                 </div>
                 <div className="text-center">
-                  <Mail className="w-4 h-4 text-green-400 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-white">0</p>
-                  <p className="text-[10px] text-gray-500">Views</p>
+                  <Mail className="w-4 h-4 text-green-500 mx-auto mb-1" />
+                  <p className="text-lg font-bold text-foreground">0</p>
+                  <p className="text-[10px] text-muted-foreground">Views</p>
                 </div>
               </div>
             </div>
 
             {/* Tips */}
             <div className="space-y-2 mt-4">
-              <p className="text-xs text-gray-500 font-medium">Tips to rank higher:</p>
-              <ul className="space-y-1.5 text-xs text-gray-400">
+              <p className="text-xs text-muted-foreground font-medium">Tips to rank higher:</p>
+              <ul className="space-y-1.5 text-xs text-muted-foreground">
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-400 mt-0.5">→</span>
+                  <span className="text-blue-500 mt-0.5">→</span>
                   Add a logo and cover image
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-400 mt-0.5">→</span>
+                  <span className="text-blue-500 mt-0.5">→</span>
                   Share your listing with your network
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-400 mt-0.5">→</span>
+                  <span className="text-blue-500 mt-0.5">→</span>
                   Offer exclusive perks to the community
                 </li>
               </ul>
@@ -114,8 +114,8 @@ function LaunchConfirmationContent() {
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-white/[0.06] bg-white/[0.01]">
-            <p className="text-[11px] text-gray-600">
+          <div className="px-6 py-4 border-t subtle-border bg-muted/50">
+            <p className="text-[11px] text-muted-foreground">
               - Taylor<br />
               Founder, Revolaunch
             </p>
@@ -126,7 +126,7 @@ function LaunchConfirmationContent() {
         <div className="mt-6 text-center">
           <Link
             href="/"
-            className="text-sm text-gray-500 hover:text-white transition-colors"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             ← Back to homepage
           </Link>
@@ -138,10 +138,10 @@ function LaunchConfirmationContent() {
 
 export default function LaunchConfirmationPage() {
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <Suspense fallback={
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-pulse text-gray-500">Loading...</div>
+          <div className="animate-pulse text-muted-foreground">Loading...</div>
         </div>
       }>
         <LaunchConfirmationContent />

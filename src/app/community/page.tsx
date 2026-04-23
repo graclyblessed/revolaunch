@@ -25,14 +25,14 @@ function CommunityContent() {
   })
 
   return (
-    <div className="min-h-screen flex flex-col bg-black">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
       <main className="flex-1">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-white mb-2">Community</h1>
-            <p className="text-sm text-gray-400">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Community</h1>
+            <p className="text-sm text-muted-foreground">
               Connect, compete, and grow with the Revolaunch community.
             </p>
           </div>
@@ -49,15 +49,15 @@ function CommunityContent() {
                       href={`/community?type=${board.id}`}
                       className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all ${
                         isActive
-                          ? 'bg-white/[0.06] text-white font-medium'
-                          : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
+                          ? 'bg-muted text-foreground font-medium'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       }`}
                     >
                       <span className="text-base">{board.icon}</span>
                       <div className="flex-1 min-w-0">
                         <p className="truncate">{board.name}</p>
                       </div>
-                      <span className="text-[10px] text-gray-600 font-medium tabular-nums">
+                      <span className="text-[10px] text-muted-foreground font-medium tabular-nums">
                         {board.itemCount > 999 ? `${(board.itemCount / 1000).toFixed(1)}K` : board.itemCount}
                       </span>
                     </Link>
@@ -72,8 +72,8 @@ function CommunityContent() {
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">{activeBoard.icon}</span>
                   <div>
-                    <h2 className="text-lg font-semibold text-white">{activeBoard.name}</h2>
-                    <p className="text-xs text-gray-500">{activeBoard.description}</p>
+                    <h2 className="text-lg font-semibold text-foreground">{activeBoard.name}</h2>
+                    <p className="text-xs text-muted-foreground">{activeBoard.description}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -81,7 +81,7 @@ function CommunityContent() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setSortBy(sortBy === 'popular' ? 'newest' : 'popular')}
-                    className="h-8 text-xs text-gray-400 hover:text-white"
+                    className="h-8 text-xs text-muted-foreground hover:text-foreground"
                   >
                     <ArrowUpDown className="w-3 h-3 mr-1" />
                     {sortBy === 'popular' ? 'Most Stars' : 'Newest'}
@@ -90,10 +90,10 @@ function CommunityContent() {
               </div>
 
               {sortedItems.length === 0 ? (
-                <div className="rounded-xl border border-white/[0.06] bg-[#0a0a0a] p-12 text-center">
+                <div className="rounded-xl border subtle-border surface p-12 text-center">
                   <span className="text-3xl mb-3 block">{activeBoard.icon}</span>
-                  <h3 className="text-sm font-medium text-white mb-1">No posts yet</h3>
-                  <p className="text-xs text-gray-500 mb-4">Be the first to post in {activeBoard.name}</p>
+                  <h3 className="text-sm font-medium text-foreground mb-1">No posts yet</h3>
+                  <p className="text-xs text-muted-foreground mb-4">Be the first to post in {activeBoard.name}</p>
                   <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white text-xs h-8 rounded-lg">
                     Create Post
                   </Button>
@@ -107,25 +107,25 @@ function CommunityContent() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="rounded-xl border border-white/[0.06] bg-[#0a0a0a] hover:border-white/[0.1] transition-all p-4"
+                        className="rounded-xl border subtle-border surface hover:border-blue-500/30 transition-all p-4"
                       >
                         <div className="flex gap-4">
                           <div className="flex flex-col items-center gap-0.5 shrink-0 pt-1">
-                            <button className="text-gray-500 hover:text-blue-400 transition-colors">
+                            <button className="text-muted-foreground hover:text-blue-500 transition-colors">
                               <Star className="w-4 h-4" />
                             </button>
-                            <span className="text-sm font-bold text-white tabular-nums">{item.upvotes}</span>
+                            <span className="text-sm font-bold text-foreground tabular-nums">{item.upvotes}</span>
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-semibold text-white mb-1">{item.title}</h3>
-                            <p className="text-xs text-gray-500 line-clamp-2 mb-2">{item.description}</p>
+                            <h3 className="text-sm font-semibold text-foreground mb-1">{item.title}</h3>
+                            <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{item.description}</p>
                             <div className="flex flex-wrap items-center gap-2">
                               {item.tags.map(tag => (
                                 <Badge
                                   key={tag}
                                   variant="secondary"
-                                  className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] text-gray-400 border border-white/[0.06] h-5"
+                                  className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border h-5"
                                 >
                                   {tag}
                                 </Badge>
@@ -133,12 +133,12 @@ function CommunityContent() {
                               {item.startup && (
                                 <Badge
                                   variant="secondary"
-                                  className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 h-5"
+                                  className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20 h-5"
                                 >
                                   {item.startup}
                                 </Badge>
                               )}
-                              <span className="text-[10px] text-gray-600 ml-auto">
+                              <span className="text-[10px] text-muted-foreground ml-auto">
                                 by {item.author}
                               </span>
                             </div>
@@ -146,10 +146,10 @@ function CommunityContent() {
 
                           {item.mrr && (
                             <div className="shrink-0 text-right">
-                              <span className="text-xs font-bold text-green-400">
+                              <span className="text-xs font-bold text-green-500">
                                 ${(item.mrr / 1000).toFixed(0)}K
                               </span>
-                              <p className="text-[10px] text-gray-600">MRR</p>
+                              <p className="text-[10px] text-muted-foreground">MRR</p>
                             </div>
                           )}
                         </div>
@@ -169,8 +169,8 @@ function CommunityContent() {
 export default function CommunityPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="animate-pulse text-gray-500">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
       </div>
     }>
       <CommunityContent />

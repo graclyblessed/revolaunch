@@ -128,15 +128,15 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-black">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden border-b border-white/[0.04]">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.04] via-transparent to-purple-500/[0.04]" />
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/[0.06] rounded-full blur-[100px]" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/[0.04] rounded-full blur-[100px]" />
+        <section className="relative overflow-hidden border-b subtle-border">
+          <div className="absolute inset-0 hero-gradient" />
+          <div className="absolute top-0 left-1/4 w-96 h-96 glow-blob-blue rounded-full blur-[100px]" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 glow-blob-purple rounded-full blur-[100px]" />
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
             <motion.div
@@ -145,11 +145,11 @@ export default function Home() {
               transition={{ duration: 0.5 }}
               className="text-center max-w-3xl mx-auto"
             >
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white mb-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground mb-4">
                 Get funded. Get acquired.{' '}
                 <span className="gradient-text-blue">Get seen.</span>
               </h1>
-              <p className="text-base sm:text-lg text-gray-400 mb-8">
+              <p className="text-base sm:text-lg text-muted-foreground mb-8">
                 Rank higher with stars. Invite network or boost.
               </p>
 
@@ -161,7 +161,7 @@ export default function Home() {
                   </Button>
                 </Link>
                 <Link href="/inside">
-                  <Button variant="outline" size="lg" className="border-white/10 text-gray-300 hover:text-white hover:bg-white/[0.05] rounded-xl h-11 px-6">
+                  <Button variant="outline" size="lg" className="text-muted-foreground hover:text-foreground rounded-xl h-11 px-6">
                     For Investors
                     <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
@@ -176,18 +176,18 @@ export default function Home() {
                 className="flex items-center justify-center gap-6 mt-10"
               >
                 <div className="text-center">
-                  <div className="text-xl font-bold text-white">{stats.totalStartups}+</div>
-                  <div className="text-xs text-gray-500">Startups</div>
+                  <div className="text-xl font-bold text-foreground">{stats.totalStartups}+</div>
+                  <div className="text-xs text-muted-foreground">Startups</div>
                 </div>
-                <div className="w-px h-8 bg-white/10" />
+                <div className="w-px h-8 bg-border" />
                 <div className="text-center">
-                  <div className="text-xl font-bold text-white">{stats.totalVotes}+</div>
-                  <div className="text-xs text-gray-500">Stars</div>
+                  <div className="text-xl font-bold text-foreground">{stats.totalVotes}+</div>
+                  <div className="text-xs text-muted-foreground">Stars</div>
                 </div>
-                <div className="w-px h-8 bg-white/10 hidden sm:block" />
+                <div className="w-px h-8 bg-border hidden sm:block" />
                 <div className="hidden sm:block text-center">
-                  <div className="text-xl font-bold text-white">{stats.totalCategories}+</div>
-                  <div className="text-xs text-gray-500">Categories</div>
+                  <div className="text-xl font-bold text-foreground">{stats.totalCategories}+</div>
+                  <div className="text-xs text-muted-foreground">Categories</div>
                 </div>
               </motion.div>
             </motion.div>
@@ -202,20 +202,20 @@ export default function Home() {
               {/* Search and Filters */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
                 <div className="relative flex-1 w-full">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Search startups..."
-                    className="pl-10 h-10 bg-white/[0.04] border-white/[0.08] text-sm text-white placeholder:text-gray-500 rounded-xl focus:border-blue-500/50"
+                    className="pl-10 h-10 input-bg input-bg-focus text-sm text-foreground rounded-xl"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                   />
                 </div>
                 <div className="flex items-center gap-2">
                   <Select value={sort} onValueChange={setSort}>
-                    <SelectTrigger className="w-[140px] h-10 bg-white/[0.04] border-white/[0.08] text-sm rounded-xl">
+                    <SelectTrigger className="w-[140px] h-10 input-bg text-sm rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#111] border-white/[0.08]">
+                    <SelectContent className="popover-bg border-border">
                       <SelectItem value="popular">Most Stars</SelectItem>
                       <SelectItem value="newest">Newest</SelectItem>
                     </SelectContent>
@@ -223,7 +223,7 @@ export default function Home() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-10 border-white/[0.08] text-gray-400 hover:text-white rounded-xl"
+                    className="h-10 text-muted-foreground hover:text-foreground rounded-xl"
                     onClick={() => setShowFilters(!showFilters)}
                   >
                     <SlidersHorizontal className="w-4 h-4" />
@@ -241,10 +241,10 @@ export default function Home() {
                     className="mb-4 flex flex-wrap gap-2"
                   >
                     <Select value={selectedCategory} onValueChange={v => setSelectedCategory(v)}>
-                      <SelectTrigger className="w-[160px] h-9 bg-white/[0.04] border-white/[0.08] text-xs rounded-lg">
+                      <SelectTrigger className="w-[160px] h-9 input-bg text-xs rounded-lg">
                         <SelectValue placeholder="Category" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#111] border-white/[0.08]">
+                      <SelectContent className="popover-bg border-border">
                         <SelectItem value="all">All Categories</SelectItem>
                         {categories.map(c => (
                           <SelectItem key={c.name} value={c.name}>
@@ -254,10 +254,10 @@ export default function Home() {
                       </SelectContent>
                     </Select>
                     <Select value={selectedStage} onValueChange={v => setSelectedStage(v)}>
-                      <SelectTrigger className="w-[130px] h-9 bg-white/[0.04] border-white/[0.08] text-xs rounded-lg">
+                      <SelectTrigger className="w-[130px] h-9 input-bg text-xs rounded-lg">
                         <SelectValue placeholder="Stage" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#111] border-white/[0.08]">
+                      <SelectContent className="popover-bg border-border">
                         <SelectItem value="all">All Stages</SelectItem>
                         <SelectItem value="Pre-seed">Pre-seed</SelectItem>
                         <SelectItem value="Seed">Seed</SelectItem>
@@ -269,7 +269,7 @@ export default function Home() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-9 text-xs text-gray-400 hover:text-white"
+                        className="h-9 text-xs text-muted-foreground hover:text-foreground"
                         onClick={() => { setSelectedCategory('all'); setSelectedStage('all'); setSearch('') }}
                       >
                         <X className="w-3 h-3 mr-1" />
@@ -286,8 +286,8 @@ export default function Home() {
                   onClick={() => setSelectedCategory('all')}
                   className={`text-[11px] px-3 py-1.5 rounded-full font-medium transition-colors shrink-0 ${
                     selectedCategory === 'all'
-                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                      : 'bg-white/[0.04] text-gray-400 hover:text-white border border-transparent'
+                      ? 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30'
+                      : 'bg-muted text-muted-foreground hover:text-foreground border border-transparent'
                   }`}
                 >
                   All
@@ -298,8 +298,8 @@ export default function Home() {
                     onClick={() => setSelectedCategory(c.name)}
                     className={`text-[11px] px-3 py-1.5 rounded-full font-medium transition-colors shrink-0 ${
                       selectedCategory === c.name
-                        ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                        : 'bg-white/[0.04] text-gray-400 hover:text-white border border-transparent'
+                        ? 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30'
+                        : 'bg-muted text-muted-foreground hover:text-foreground border border-transparent'
                     }`}
                   >
                     {c.icon} {c.name}
@@ -311,12 +311,12 @@ export default function Home() {
               {loading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[...Array(6)].map((_, i) => (
-                    <div key={i} className="h-32 rounded-xl bg-white/[0.03] animate-pulse" />
+                    <div key={i} className="h-32 rounded-xl skeleton-bg animate-pulse" />
                   ))}
                 </div>
               ) : displayedStartups.length === 0 ? (
                 <div className="text-center py-16">
-                  <p className="text-gray-500">No startups found matching your criteria.</p>
+                  <p className="text-muted-foreground">No startups found matching your criteria.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -339,11 +339,11 @@ export default function Home() {
                 <WeeklyLeaderboard winners={fallbackWeeklyWinners} />
 
                 {/* Quick community boards */}
-                <div className="mt-4 rounded-xl border border-white/[0.06] bg-[#0a0a0a] overflow-hidden">
-                  <div className="p-4 border-b border-white/[0.06]">
-                    <h2 className="text-sm font-semibold text-white">Community Boards</h2>
+                <div className="mt-4 rounded-xl border subtle-border surface overflow-hidden">
+                  <div className="p-4 border-b subtle-border">
+                    <h2 className="text-sm font-semibold text-foreground">Community Boards</h2>
                   </div>
-                  <div className="divide-y divide-white/[0.04]">
+                  <div className="divide-y divide-border">
                     {[
                       { name: 'MRR Board', count: '42', icon: '📊', href: '/community?type=mrr-board' },
                       { name: 'Weekly Board', count: '1.4K', icon: '🏆', href: '/community?type=weekly-board' },
@@ -353,23 +353,23 @@ export default function Home() {
                       <Link
                         key={board.name}
                         href={board.href}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 surface-hover transition-colors"
                       >
                         <span className="text-lg">{board.icon}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-300">{board.name}</p>
+                          <p className="text-sm text-foreground">{board.name}</p>
                         </div>
-                        <span className="text-xs text-gray-500 font-medium">{board.count}</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-gray-600" />
+                        <span className="text-xs text-muted-foreground font-medium">{board.count}</span>
+                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
                       </Link>
                     ))}
                   </div>
                 </div>
 
                 {/* CTA */}
-                <div className="mt-4 rounded-xl border border-blue-500/20 bg-blue-500/[0.05] p-4">
-                  <h3 className="text-sm font-semibold text-white mb-1">Win the Week</h3>
-                  <p className="text-xs text-gray-400 mb-3">
+                <div className="mt-4 rounded-xl border border-blue-500/20 card-active-bg p-4">
+                  <h3 className="text-sm font-semibold text-foreground mb-1">Win the Week</h3>
+                  <p className="text-xs text-muted-foreground mb-3">
                     Rank #1 on the weekly leaderboard and get featured to 50K+ visitors.
                   </p>
                   <Link href="/submit">
@@ -386,24 +386,24 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] mt-auto">
+      <footer className="border-t subtle-border mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
                 <Rocket className="w-3 h-3 text-white" />
               </div>
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-muted-foreground">
                 Where startups begin.
               </span>
             </div>
-            <div className="flex items-center gap-6 text-xs text-gray-500">
-              <Link href="/about" className="hover:text-white transition-colors">About</Link>
-              <Link href="/community" className="hover:text-white transition-colors">Community</Link>
-              <Link href="/inside" className="hover:text-white transition-colors">Inside</Link>
-              <Link href="/submit" className="hover:text-white transition-colors">Launch</Link>
+            <div className="flex items-center gap-6 text-xs text-muted-foreground">
+              <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
+              <Link href="/community" className="hover:text-foreground transition-colors">Community</Link>
+              <Link href="/inside" className="hover:text-foreground transition-colors">Inside</Link>
+              <Link href="/submit" className="hover:text-foreground transition-colors">Launch</Link>
             </div>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-muted-foreground">
               © 2025 Revolaunch
             </p>
           </div>

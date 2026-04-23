@@ -43,9 +43,48 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Dark theme by default - matching Bowora */
+/* ============================================
+   LIGHT MODE (default - :root)
+   ============================================ */
 :root {
   --radius: 0.625rem;
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card: #f8fafc;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #3B82F6;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --ring: #3B82F6;
+  --chart-1: #3B82F6;
+  --chart-2: #22C55E;
+  --chart-3: #F59E0B;
+  --chart-4: #A855F7;
+  --chart-5: #EC4899;
+  --sidebar: #f8fafc;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #3B82F6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #3B82F6;
+}
+
+/* ============================================
+   DARK MODE (.dark class - matching Bowora)
+   ============================================ */
+.dark {
   --background: #000000;
   --foreground: #ffffff;
   --card: #0a0a0a;
@@ -98,12 +137,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(128, 128, 128, 0.3);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(128, 128, 128, 0.5);
 }
 
 /* Selection */
@@ -153,13 +192,21 @@
   left: 50%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
+}
+
+.dark .donut-hole {
   background: #000;
 }
 
 /* Glass effect */
 .glass {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(128, 128, 128, 0.06);
   backdrop-filter: blur(12px);
+  border: 1px solid rgba(128, 128, 128, 0.12);
+}
+
+.dark .glass {
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -176,4 +223,127 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* ============================================
+   THEME-AWARE UTILITY CLASSES
+   Used throughout components for dark/light support
+   ============================================ */
+
+/* Header background */
+.header-bg {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+}
+.dark .header-bg {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Surface (card bg, sidebar bg) */
+.surface {
+  background-color: #f8fafc;
+}
+.dark .surface {
+  background-color: #0a0a0a;
+}
+
+/* Surface hover */
+.surface-hover:hover {
+  background-color: #f1f5f9;
+}
+.dark .surface-hover:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Subtle border */
+.subtle-border {
+  border-color: #e2e8f0;
+}
+.dark .subtle-border {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Muted text */
+.text-muted {
+  color: #64748b;
+}
+.dark .text-muted {
+  color: #9ca3af;
+}
+
+/* Faint text */
+.text-faint {
+  color: #94a3b8;
+}
+.dark .text-faint {
+  color: #6b7280;
+}
+
+/* Ultra-faint text */
+.text-ultrafaint {
+  color: #cbd5e1;
+}
+.dark .text-ultrafaint {
+  color: #4b5563;
+}
+
+/* Hero gradient overlay */
+.hero-gradient {
+  background: linear-gradient(to bottom right, rgba(59, 130, 246, 0.06), transparent, rgba(168, 85, 247, 0.06));
+}
+.dark .hero-gradient {
+  background: linear-gradient(to bottom right, rgba(59, 130, 246, 0.04), transparent, rgba(168, 85, 247, 0.04));
+}
+
+/* Glow blobs */
+.glow-blob-blue {
+  background: rgba(59, 130, 246, 0.08);
+}
+.dark .glow-blob-blue {
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.glow-blob-purple {
+  background: rgba(168, 85, 247, 0.06);
+}
+.dark .glow-blob-purple {
+  background: rgba(168, 85, 247, 0.04);
+}
+
+/* Popover bg (for dropdowns) */
+.popover-bg {
+  background-color: #ffffff;
+}
+.dark .popover-bg {
+  background-color: #111;
+}
+
+/* Skeleton / pulse */
+.skeleton-bg {
+  background-color: #f1f5f9;
+}
+.dark .skeleton-bg {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Input bg */
+.input-bg {
+  background-color: rgba(0, 0, 0, 0.03);
+  border-color: #e2e8f0;
+}
+.dark .input-bg {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.input-bg-focus:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* Card active/blue highlight */
+.card-active-bg {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+.dark .card-active-bg {
+  background-color: rgba(59, 130, 246, 0.05);
 }

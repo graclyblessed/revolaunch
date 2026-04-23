@@ -83,7 +83,7 @@ export default function SubmitPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-black">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
       <main className="flex-1">
@@ -91,10 +91,10 @@ export default function SubmitPage() {
           {/* Progress bar */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-gray-500">Step {step} of {totalSteps}</span>
-              <span className="text-xs text-gray-500">{Math.round(progress)}%</span>
+              <span className="text-xs text-muted-foreground">Step {step} of {totalSteps}</span>
+              <span className="text-xs text-muted-foreground">{Math.round(progress)}%</span>
             </div>
-            <div className="w-full h-1 bg-white/[0.06] rounded-full overflow-hidden">
+            <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-blue-500 rounded-full"
                 initial={{ width: 0 }}
@@ -116,99 +116,99 @@ export default function SubmitPage() {
               >
                 {/* Form */}
                 <div className="flex-1">
-                  <h1 className="text-2xl font-bold text-white mb-1">
+                  <h1 className="text-2xl font-bold text-foreground mb-1">
                     Let&apos;s personalize your experience, {profile.firstName || 'founder'}.
                   </h1>
-                  <p className="text-sm text-gray-400 mb-6">
+                  <p className="text-sm text-muted-foreground mb-6">
                     Tell us about yourself so we can tailor your Revolaunch experience.
                   </p>
 
                   {/* Profile photo placeholder */}
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 border-2 border-white/[0.08] flex items-center justify-center">
-                      <Camera className="w-5 h-5 text-gray-400" />
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 border-2 border-border flex items-center justify-center">
+                      <Camera className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <div>
-                      <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white text-xs h-8">
+                      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-xs h-8">
                         <Camera className="w-3.5 h-3.5 mr-1.5" />
                         Upload Photo
                       </Button>
-                      <p className="text-[10px] text-gray-600 mt-0.5">Optional - helps build trust</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Optional - helps build trust</p>
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-gray-300">First name *</label>
+                        <label className="text-xs font-medium text-foreground">First name *</label>
                         <Input
                           placeholder="John"
                           value={profile.firstName}
                           onChange={e => setProfile({ ...profile, firstName: e.target.value })}
-                          className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-gray-600 h-10 rounded-lg"
+                          className="input-bg input-bg-focus text-foreground h-10 rounded-lg"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-gray-300">Last name *</label>
+                        <label className="text-xs font-medium text-foreground">Last name *</label>
                         <Input
                           placeholder="Doe"
                           value={profile.lastName}
                           onChange={e => setProfile({ ...profile, lastName: e.target.value })}
-                          className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-gray-600 h-10 rounded-lg"
+                          className="input-bg input-bg-focus text-foreground h-10 rounded-lg"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-gray-300">Role</label>
+                      <label className="text-xs font-medium text-foreground">Role</label>
                       <Input
                         placeholder="Co-founder at SpaceX"
                         value={profile.role}
                         onChange={e => setProfile({ ...profile, role: e.target.value })}
-                        className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-gray-600 h-10 rounded-lg"
+                        className="input-bg input-bg-focus text-foreground h-10 rounded-lg"
                       />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-gray-300">
-                          X (Twitter) <span className="text-gray-600">optional</span>
+                        <label className="text-xs font-medium text-foreground">
+                          X (Twitter) <span className="text-muted-foreground">optional</span>
                         </label>
                         <div className="relative">
-                          <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+                          <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                           <Input
                             placeholder="https://x.com/handle"
                             value={profile.twitter}
                             onChange={e => setProfile({ ...profile, twitter: e.target.value })}
-                            className="pl-9 bg-white/[0.04] border-white/[0.08] text-white placeholder:text-gray-600 h-10 rounded-lg"
+                            className="pl-9 input-bg input-bg-focus text-foreground h-10 rounded-lg"
                           />
                         </div>
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-gray-300">
-                          LinkedIn <span className="text-gray-600">optional</span>
+                        <label className="text-xs font-medium text-foreground">
+                          LinkedIn <span className="text-muted-foreground">optional</span>
                         </label>
                         <div className="relative">
-                          <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+                          <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                           <Input
                             placeholder="https://linkedin.com/in/profile"
                             value={profile.linkedin}
                             onChange={e => setProfile({ ...profile, linkedin: e.target.value })}
-                            className="pl-9 bg-white/[0.04] border-white/[0.08] text-white placeholder:text-gray-600 h-10 rounded-lg"
+                            className="pl-9 input-bg input-bg-focus text-foreground h-10 rounded-lg"
                           />
                         </div>
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-gray-300 mb-2 block">You are here as</label>
+                      <label className="text-xs font-medium text-foreground mb-2 block">You are here as</label>
                       <div className="flex gap-3">
                         <button
                           onClick={() => setProfile({ ...profile, roleType: 'founder' })}
                           className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all border ${
                             profile.roleType === 'founder'
-                              ? 'bg-white text-black border-white'
-                              : 'bg-white/[0.04] text-gray-300 border-white/[0.08] hover:border-white/20'
+                              ? 'bg-foreground text-background border-foreground'
+                              : 'bg-muted text-muted-foreground border-border hover:border-foreground/20'
                           }`}
                         >
                           <Rocket className="w-4 h-4 inline mr-1.5" />
@@ -218,8 +218,8 @@ export default function SubmitPage() {
                           onClick={() => setProfile({ ...profile, roleType: 'investor' })}
                           className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all border ${
                             profile.roleType === 'investor'
-                              ? 'bg-white text-black border-white'
-                              : 'bg-white/[0.04] text-gray-300 border-white/[0.08] hover:border-white/20'
+                              ? 'bg-foreground text-background border-foreground'
+                              : 'bg-muted text-muted-foreground border-border hover:border-foreground/20'
                           }`}
                         >
                           <Trophy className="w-4 h-4 inline mr-1.5" />
@@ -230,7 +230,7 @@ export default function SubmitPage() {
                   </div>
 
                   <div className="flex justify-end mt-6">
-                    <Button onClick={handleProfileNext} className="bg-white text-black hover:bg-gray-200 font-medium rounded-lg h-10 px-6">
+                    <Button onClick={handleProfileNext} className="bg-foreground text-background hover:bg-foreground/80 font-medium rounded-lg h-10 px-6">
                       Next <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
                   </div>
@@ -239,33 +239,33 @@ export default function SubmitPage() {
                 {/* Live preview card */}
                 <div className="lg:w-[300px] shrink-0">
                   <div className="lg:sticky lg:top-[72px]">
-                    <p className="text-xs text-gray-500 mb-3">Preview</p>
-                    <div className="rounded-xl border-2 border-blue-500/30 bg-[#0a0a0a] p-5">
+                    <p className="text-xs text-muted-foreground mb-3">Preview</p>
+                    <div className="rounded-xl border-2 border-blue-500/30 surface p-5">
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center">
                           <Rocket className="w-3.5 h-3.5 text-white" />
                         </div>
-                        <span className="text-xs font-medium text-gray-400">revolaunch.net</span>
+                        <span className="text-xs font-medium text-muted-foreground">revolaunch.net</span>
                       </div>
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-white font-bold text-lg">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-foreground font-bold text-lg">
                           {profile.firstName ? profile.firstName[0].toUpperCase() : '?'}
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-white">
+                          <p className="text-sm font-semibold text-foreground">
                             {profile.firstName} {profile.lastName}
                           </p>
-                          <p className="text-xs text-gray-500">{profile.role || 'Your role'}</p>
+                          <p className="text-xs text-muted-foreground">{profile.role || 'Your role'}</p>
                         </div>
                       </div>
                       {profile.twitter && (
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Twitter className="w-3 h-3" />
                           <span>{profile.twitter}</span>
                         </div>
                       )}
                       {profile.linkedin && (
-                        <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                           <Linkedin className="w-3 h-3" />
                           <span>{profile.linkedin}</span>
                         </div>
@@ -289,43 +289,43 @@ export default function SubmitPage() {
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-4xl">🏅</span>
                   </div>
-                  <h1 className="text-2xl font-bold text-white mb-2">
+                  <h1 className="text-2xl font-bold text-foreground mb-2">
                     Win the Week. Every Single Week.
                   </h1>
-                  <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
                     Collect stars and reviews from the community to climb the weekly leaderboard.
                     The top 3 startups every week get featured to 50K+ visitors.
                   </p>
 
                   <div className="space-y-4 mb-8">
-                    <div className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <div className="flex items-start gap-3 p-4 rounded-xl bg-muted border subtle-border">
                       <span className="text-xl">⭐</span>
                       <div>
-                        <p className="text-sm font-medium text-white">Collect Stars</p>
-                        <p className="text-xs text-gray-500">Every star from the community counts toward your weekly ranking</p>
+                        <p className="text-sm font-medium text-foreground">Collect Stars</p>
+                        <p className="text-xs text-muted-foreground">Every star from the community counts toward your weekly ranking</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <div className="flex items-start gap-3 p-4 rounded-xl bg-muted border subtle-border">
                       <span className="text-xl">🏆</span>
                       <div>
-                        <p className="text-sm font-medium text-white">Win the Week</p>
-                        <p className="text-xs text-gray-500">Top 3 every week get featured on our homepage and newsletter</p>
+                        <p className="text-sm font-medium text-foreground">Win the Week</p>
+                        <p className="text-xs text-muted-foreground">Top 3 every week get featured on our homepage and newsletter</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <div className="flex items-start gap-3 p-4 rounded-xl bg-muted border subtle-border">
                       <span className="text-xl">🚀</span>
                       <div>
-                        <p className="text-sm font-medium text-white">Get Discovered</p>
-                        <p className="text-xs text-gray-500">Investors and early adopters browse Revolaunch daily</p>
+                        <p className="text-sm font-medium text-foreground">Get Discovered</p>
+                        <p className="text-xs text-muted-foreground">Investors and early adopters browse Revolaunch daily</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex justify-between mt-6">
-                    <Button variant="ghost" onClick={() => setStep(1)} className="text-gray-400 hover:text-white h-10">
+                    <Button variant="ghost" onClick={() => setStep(1)} className="text-muted-foreground hover:text-foreground h-10">
                       <ChevronLeft className="w-4 h-4 mr-1" /> Previous
                     </Button>
-                    <Button onClick={() => setStep(3)} className="bg-white text-black hover:bg-gray-200 font-medium rounded-lg h-10 px-6">
+                    <Button onClick={() => setStep(3)} className="bg-foreground text-background hover:bg-foreground/80 font-medium rounded-lg h-10 px-6">
                       Next <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
                   </div>
@@ -334,26 +334,26 @@ export default function SubmitPage() {
                 {/* Leaderboard preview */}
                 <div className="lg:w-[300px] shrink-0">
                   <div className="lg:sticky lg:top-[72px]">
-                    <div className="rounded-xl border border-white/[0.06] bg-[#0a0a0a] overflow-hidden">
-                      <div className="p-4 border-b border-white/[0.06]">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider">Current Leaders</p>
+                    <div className="rounded-xl border subtle-border surface overflow-hidden">
+                      <div className="p-4 border-b subtle-border">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Current Leaders</p>
                       </div>
-                      <div className="divide-y divide-white/[0.04]">
+                      <div className="divide-y divide-border">
                         {[
                           { name: 'Your Startup', pts: 0, medal: '🥇', color: 'bg-yellow-500/20' },
                           { name: 'NeuralForge', pts: 340, medal: '🥈', color: 'bg-gray-400/20' },
                           { name: 'PayStream', pts: 290, medal: '🥉', color: 'bg-orange-700/20' },
                         ].map((item, i) => (
-                          <div key={i} className={`flex items-center gap-3 p-3 ${i === 0 ? 'bg-blue-500/[0.03]' : ''}`}>
+                          <div key={i} className={`flex items-center gap-3 p-3 ${i === 0 ? 'card-active-bg' : ''}`}>
                             <div className={`w-8 h-8 rounded-lg ${item.color} flex items-center justify-center text-base`}>
                               {item.medal}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-white truncate">{item.name}</p>
+                              <p className="text-sm font-medium text-foreground truncate">{item.name}</p>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Star className="w-3 h-3 text-amber-400" />
-                              <span className="text-sm font-bold text-white tabular-nums">{item.pts}</span>
+                              <Star className="w-3 h-3 text-amber-500" />
+                              <span className="text-sm font-bold text-foreground tabular-nums">{item.pts}</span>
                             </div>
                           </div>
                         ))}
@@ -374,66 +374,66 @@ export default function SubmitPage() {
                 className="flex flex-col lg:flex-row gap-8"
               >
                 <div className="flex-1">
-                  <h1 className="text-2xl font-bold text-white mb-2">
+                  <h1 className="text-2xl font-bold text-foreground mb-2">
                     Ready to launch?
                   </h1>
-                  <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
                     Launch your startup and compete on our weekly leaderboard. Earn stars, get reviews, and get discovered by thousands.
                   </p>
 
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-gray-300">Startup Name *</label>
+                        <label className="text-xs font-medium text-foreground">Startup Name *</label>
                         <Input
                           placeholder="e.g., Acme Inc."
                           value={startup.name}
                           onChange={e => setStartup({ ...startup, name: e.target.value })}
-                          className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-gray-600 h-10 rounded-lg"
+                          className="input-bg input-bg-focus text-foreground h-10 rounded-lg"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-gray-300">Startup URL *</label>
+                        <label className="text-xs font-medium text-foreground">Startup URL *</label>
                         <div className="relative">
-                          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+                          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                           <Input
                             placeholder="example.com"
                             value={startup.website}
                             onChange={e => setStartup({ ...startup, website: e.target.value })}
-                            className="pl-9 bg-white/[0.04] border-white/[0.08] text-white placeholder:text-gray-600 h-10 rounded-lg"
+                            className="pl-9 input-bg input-bg-focus text-foreground h-10 rounded-lg"
                           />
                         </div>
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-gray-300">Tagline *</label>
+                      <label className="text-xs font-medium text-foreground">Tagline *</label>
                       <Input
                         placeholder="One sentence that describes your startup"
                         value={startup.tagline}
                         onChange={e => setStartup({ ...startup, tagline: e.target.value })}
-                        className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-gray-600 h-10 rounded-lg"
+                        className="input-bg input-bg-focus text-foreground h-10 rounded-lg"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-gray-300">Description</label>
+                      <label className="text-xs font-medium text-foreground">Description</label>
                       <textarea
                         placeholder="Tell us more about what you're building..."
                         value={startup.description}
                         onChange={e => setStartup({ ...startup, description: e.target.value })}
-                        className="w-full min-h-[80px] bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500/50 resize-none"
+                        className="w-full min-h-[80px] input-bg input-bg-focus text-foreground rounded-lg px-3 py-2 text-sm resize-none"
                       />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-gray-300">Category *</label>
+                        <label className="text-xs font-medium text-foreground">Category *</label>
                         <Select value={startup.category} onValueChange={v => setStartup({ ...startup, category: v })}>
-                          <SelectTrigger className="bg-white/[0.04] border-white/[0.08] text-white h-10 rounded-lg">
+                          <SelectTrigger className="input-bg text-foreground h-10 rounded-lg">
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#111] border-white/[0.08]">
+                          <SelectContent className="popover-bg border-border">
                             {categories.map(c => (
                               <SelectItem key={c} value={c}>{c}</SelectItem>
                             ))}
@@ -441,12 +441,12 @@ export default function SubmitPage() {
                         </Select>
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-gray-300">Stage</label>
+                        <label className="text-xs font-medium text-foreground">Stage</label>
                         <Select value={startup.stage} onValueChange={v => setStartup({ ...startup, stage: v })}>
-                          <SelectTrigger className="bg-white/[0.04] border-white/[0.08] text-white h-10 rounded-lg">
+                          <SelectTrigger className="input-bg text-foreground h-10 rounded-lg">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#111] border-white/[0.08]">
+                          <SelectContent className="popover-bg border-border">
                             {stages.map(s => (
                               <SelectItem key={s} value={s}>{s}</SelectItem>
                             ))}
@@ -457,12 +457,12 @@ export default function SubmitPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-gray-300">Team Size</label>
+                        <label className="text-xs font-medium text-foreground">Team Size</label>
                         <Select value={startup.teamSize} onValueChange={v => setStartup({ ...startup, teamSize: v })}>
-                          <SelectTrigger className="bg-white/[0.04] border-white/[0.08] text-white h-10 rounded-lg">
+                          <SelectTrigger className="input-bg text-foreground h-10 rounded-lg">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#111] border-white/[0.08]">
+                          <SelectContent className="popover-bg border-border">
                             {['1-5', '6-20', '21-50', '51-200', '200+'].map(s => (
                               <SelectItem key={s} value={s}>{s}</SelectItem>
                             ))}
@@ -470,44 +470,44 @@ export default function SubmitPage() {
                         </Select>
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-gray-300">Founded Year</label>
+                        <label className="text-xs font-medium text-foreground">Founded Year</label>
                         <Input
                           type="number"
                           placeholder="2024"
                           value={startup.foundedYear}
                           onChange={e => setStartup({ ...startup, foundedYear: e.target.value })}
-                          className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-gray-600 h-10 rounded-lg"
+                          className="input-bg input-bg-focus text-foreground h-10 rounded-lg"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-gray-300">Country</label>
+                        <label className="text-xs font-medium text-foreground">Country</label>
                         <Input
                           placeholder="United States"
                           value={startup.country}
                           onChange={e => setStartup({ ...startup, country: e.target.value })}
-                          className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-gray-600 h-10 rounded-lg"
+                          className="input-bg input-bg-focus text-foreground h-10 rounded-lg"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-gray-300">Contact Email</label>
+                      <label className="text-xs font-medium text-foreground">Contact Email</label>
                       <Input
                         type="email"
                         placeholder="founder@startup.com"
                         value={startup.email}
                         onChange={e => setStartup({ ...startup, email: e.target.value })}
-                        className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-gray-600 h-10 rounded-lg"
+                        className="input-bg input-bg-focus text-foreground h-10 rounded-lg"
                       />
                     </div>
                   </div>
 
                   <div className="flex justify-between mt-6">
-                    <Button variant="ghost" onClick={() => setStep(2)} className="text-gray-400 hover:text-white h-10">
+                    <Button variant="ghost" onClick={() => setStep(2)} className="text-muted-foreground hover:text-foreground h-10">
                       <ChevronLeft className="w-4 h-4 mr-1" /> Previous
                     </Button>
                     <div className="flex items-center gap-3">
-                      <Button variant="ghost" onClick={() => router.push('/')} className="text-gray-500 hover:text-white text-sm h-10">
+                      <Button variant="ghost" onClick={() => router.push('/')} className="text-muted-foreground hover:text-foreground text-sm h-10">
                         I&apos;ll do this later
                       </Button>
                       <Button
@@ -531,19 +531,19 @@ export default function SubmitPage() {
                 {/* Launch Now CTA */}
                 <div className="lg:w-[300px] shrink-0">
                   <div className="lg:sticky lg:top-[72px]">
-                    <div className="rounded-xl border border-blue-500/20 bg-blue-500/[0.05] p-6 text-center">
+                    <div className="rounded-xl border border-blue-500/20 card-active-bg p-6 text-center">
                       <h2 className="text-3xl font-bold gradient-text-blue mb-2">LAUNCH NOW</h2>
-                      <p className="text-xs text-gray-400 mb-4">
+                      <p className="text-xs text-muted-foreground mb-4">
                         Join 36 startups already competing for the top spot this week.
                       </p>
                       <div className="grid grid-cols-2 gap-3 mb-4">
-                        <div className="rounded-lg bg-white/[0.04] p-3">
-                          <p className="text-lg font-bold text-white">50K+</p>
-                          <p className="text-[10px] text-gray-500">Monthly Visitors</p>
+                        <div className="rounded-lg bg-muted p-3">
+                          <p className="text-lg font-bold text-foreground">50K+</p>
+                          <p className="text-[10px] text-muted-foreground">Monthly Visitors</p>
                         </div>
-                        <div className="rounded-lg bg-white/[0.04] p-3">
-                          <p className="text-lg font-bold text-white">200+</p>
-                          <p className="text-[10px] text-gray-500">Investors Active</p>
+                        <div className="rounded-lg bg-muted p-3">
+                          <p className="text-lg font-bold text-foreground">200+</p>
+                          <p className="text-[10px] text-muted-foreground">Investors Active</p>
                         </div>
                       </div>
                     </div>

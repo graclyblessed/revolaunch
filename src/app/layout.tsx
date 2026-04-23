@@ -14,19 +14,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Revolaunch - The Evolution of Startup Launching",
-  description: "Discover, launch, and fund the most innovative startups. Revolaunch is the next-generation platform for founders, investors, and tech enthusiasts.",
-  keywords: ["Revolaunch", "startup", "launch", "Product Hunt alternative", "startup directory", "fundraising", "investors"],
+  title: "Revolaunch - Where Startups Begin",
+  description: "Get funded. Get acquired. Get seen. Discover, launch, and fund the most innovative startups on the next-generation startup directory.",
+  keywords: ["Revolaunch", "startup", "launch", "Product Hunt alternative", "startup directory", "fundraising", "investors", "weekly leaderboard"],
   authors: [{ name: "Revolaunch" }],
   openGraph: {
-    title: "Revolaunch - The Evolution of Startup Launching",
-    description: "Discover, launch, and fund the most innovative startups worldwide.",
+    title: "Revolaunch - Where Startups Begin",
+    description: "Get funded. Get acquired. Get seen. The next-generation startup directory.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Revolaunch",
-    description: "The evolution of startup launching",
+    description: "Where startups begin.",
+  },
+  icons: {
+    icon: "/favicon.ico",
   },
 };
 

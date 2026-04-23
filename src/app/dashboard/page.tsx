@@ -16,6 +16,13 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Header from '@/components/Header'
 import StartupLogo from '@/components/StartupLogo'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart'
+import { BarChart, Bar, XAxis, YAxis, AreaChart, Area, PieChart, Pie, Cell, CartesianGrid } from 'recharts'
 import { toast } from 'sonner'
 import {
   fallbackStartups, fallbackPerks, fallbackCommunityBoards,
@@ -79,6 +86,13 @@ const sidebarItems = [
 // ─── Animation variants ───
 const fadeIn = { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.3 } }
 const scaleIn = { initial: { opacity: 0, scale: 0.96 }, animate: { opacity: 1, scale: 1 }, transition: { duration: 0.25 } }
+
+// ─── Chart configs ───
+const activityChartConfig = { activity: { label: 'Activity', color: '#F97316' } } satisfies ChartConfig
+const categoryDistConfig = { count: { label: 'Startups', color: '#F97316' } } satisfies ChartConfig
+const perkChartConfig = { claimed: { label: 'Claimed', color: '#EC4899' }, total: { label: 'Total', color: '#64748B' } } satisfies ChartConfig
+
+const CATEGORY_COLORS = ['#F97316', '#3B82F6', '#22C55E', '#8B5CF6', '#EF4444', '#06B6D4', '#F59E0B', '#EC4899']
 
 // ─── Helper: format date ───
 function fmtDate(iso: string) {
@@ -294,6 +308,49 @@ export default function DashboardPage() {
               </div>
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Charts row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Weekly Activity chart */}
+        <div className="rounded-xl border subtle-border surface p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <BarChart3 className="w-4 h-4 text-orange-500" />
+            <h2 className="text-sm font-semibold text-foreground">Platform Activity</h2>
+          </div>
+          <ChartContainer config={activityChartConfig} className="h-[140px] w-full">
+            <BarChart data={fallbackStats.weeklyGrowth.map(w => ({ week: w.week.replace('Week ', 'W'), activity: w.startups }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="week" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="activity" fill="var(--color-activity)" radius={[3, 3, 0, 0]} barSize={16} />
+            </BarChart>
+          </ChartContainer>
+        </div>
+
+        {/* Category distribution pie */}
+        <div className="rounded-xl border subtle-border surface p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp className="w-4 h-4 text-orange-500" />
+            <h2 className="text-sm font-semibold text-foreground">Startup Categories</h2>
+          </div>
+          <ChartContainer config={categoryDistConfig} className="h-[140px] w-full">
+            <PieChart>
+              <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
+              <Pie
+                data={fallbackStats.topCategories.map((c, i) => ({ name: c.name, count: c.count, fill: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }))}
+                cx="50%"
+                cy="50%"
+                innerRadius={30}
+                outerRadius={55}
+                paddingAngle={2}
+                dataKey="count"
+                strokeWidth={0}
+              />
+            </PieChart>
+          </ChartContainer>
         </div>
       </div>
 

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import {
   Search, Star, ExternalLink, Rocket,
-  ChevronRight, X, SlidersHorizontal
+  X, SlidersHorizontal, Sparkles, Trophy,
+  ArrowRight, Zap
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,9 +15,8 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import Header from '@/components/Header'
-import { StartupCardFull } from '@/components/StartupCard'
 import {
-  fallbackStartups, fallbackWeeklyWinners, fallbackStats,
+  fallbackStartups, fallbackStats,
   fallbackCategories, getCategoryIcon,
 } from '@/lib/fallback-data'
 import type { Startup } from '@/lib/fallback-data'
@@ -30,6 +30,16 @@ function getSessionId() {
   }
   return sid
 }
+
+// Sponsor data for the sponsors section
+const sponsors = [
+  { name: 'Vercel', initials: '▲', color: '#000000', darkColor: '#ffffff' },
+  { name: 'Stripe', initials: 'S', color: '#635BFF', darkColor: '#635BFF' },
+  { name: 'Notion', initials: 'N', color: '#000000', darkColor: '#ffffff' },
+  { name: 'Linear', initials: 'L', color: '#5E6AD2', darkColor: '#5E6AD2' },
+  { name: 'Figma', initials: 'F', color: '#F24E1E', darkColor: '#F24E1E' },
+  { name: 'Supabase', initials: '⬡', color: '#3FCF8E', darkColor: '#3FCF8E' },
+]
 
 export default function Home() {
   const [startups, setStartups] = useState<Startup[]>([])
@@ -94,6 +104,14 @@ export default function Home() {
 
   const displayedStartups = sortedStartups.slice(0, 12)
 
+  // Get top 3 featured startups for Premium Plus section
+  const premiumStartups = useMemo(() => {
+    return [...startups]
+      .filter(s => s.featured)
+      .sort((a, b) => b.upvotes - a.upvotes)
+      .slice(0, 3)
+  }, [startups])
+
   const handleVote = async (slug: string) => {
     const sessionId = getSessionId()
     try {
@@ -128,7 +146,7 @@ export default function Home() {
       <main className="flex-1">
         {/* Hero — minimal, spacious */}
         <section className="relative overflow-hidden">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-14 sm:pb-20 text-center">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-16 sm:pb-24 text-center">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -164,203 +182,398 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Startups Section */}
-        <section id="startups" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-          {/* Toolbar — search + sort, clean row */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search startups..."
-                className="pl-10 h-10 text-sm text-foreground rounded-xl"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
-            <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="w-[130px] h-10 text-sm rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="popular">Most Stars</SelectItem>
-                <SelectItem value="newest">Newest</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 rounded-xl shrink-0"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Expandable filters */}
-          <AnimatePresence>
-            {showFilters && (
+        {/* =============================================
+            Premium Plus Spot — Featured Startups
+            ============================================= */}
+        {premiumStartups.length > 0 && (
+          <section className="py-16 sm:py-20">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+              {/* Section heading */}
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mb-6 flex flex-wrap items-center gap-2"
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4 }}
+                className="text-center mb-10"
               >
-                <Select value={selectedCategory} onValueChange={v => setSelectedCategory(v)}>
-                  <SelectTrigger className="w-[150px] h-9 text-xs rounded-lg">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map(c => (
-                      <SelectItem key={c.name} value={c.name}>
-                        {getCategoryIcon(c.name)} {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={selectedStage} onValueChange={v => setSelectedStage(v)}>
-                  <SelectTrigger className="w-[120px] h-9 text-xs rounded-lg">
-                    <SelectValue placeholder="Stage" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Stages</SelectItem>
-                    <SelectItem value="Pre-seed">Pre-seed</SelectItem>
-                    <SelectItem value="Seed">Seed</SelectItem>
-                    <SelectItem value="Series A">Series A</SelectItem>
-                    <SelectItem value="Series B">Series B</SelectItem>
-                  </SelectContent>
-                </Select>
-                {(selectedCategory !== 'all' || selectedStage !== 'all' || search) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-9 text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => { setSelectedCategory('all'); setSelectedStage('all'); setSearch('') }}
-                  >
-                    <X className="w-3 h-3 mr-1" />
-                    Clear
-                  </Button>
-                )}
+                <div className="inline-flex items-center gap-2 text-orange-500 mb-3">
+                  <Sparkles className="w-5 h-5" />
+                  <span className="text-sm font-semibold tracking-wide uppercase">Premium Plus</span>
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+                  Top featured startups this week
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Hand-picked by our team for exceptional innovation
+                </p>
               </motion.div>
-            )}
-          </AnimatePresence>
 
-          {/* Category pills — single clean row */}
-          <div className="flex items-center gap-1.5 mb-8 overflow-x-auto pb-1 scrollbar-none">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className={`text-xs px-3.5 py-1.5 rounded-full font-medium transition-colors whitespace-nowrap ${
-                selectedCategory === 'all'
-                  ? 'bg-foreground text-background'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              All
-            </button>
-            {categories.map(c => (
-              <button
-                key={c.name}
-                onClick={() => setSelectedCategory(c.name)}
-                className={`text-xs px-3.5 py-1.5 rounded-full font-medium transition-colors whitespace-nowrap ${
-                  selectedCategory === c.name
-                    ? 'bg-foreground text-background'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {c.icon} {c.name}
-              </button>
-            ))}
-          </div>
-
-          {/* Startups Grid — single column, wider cards, more space */}
-          {loading ? (
-            <div className="space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />
-              ))}
-            </div>
-          ) : displayedStartups.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-muted-foreground text-sm">No startups found.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <AnimatePresence>
-                {displayedStartups.map((startup) => (
+              {/* Premium cards grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {premiumStartups.map((startup, index) => (
                   <motion.div
                     key={startup.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="group rounded-2xl border border-border hover:border-orange-500/30 transition-all duration-200 p-5"
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    className="group relative"
                   >
-                    <div className="flex items-start gap-4">
-                      {/* Logo */}
-                      <div
-                        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: (startup.logoColor || '#F97316') + '18' }}
-                      >
-                        <span className="text-sm font-bold" style={{ color: startup.logoColor || '#F97316' }}>
-                          {startup.name.charAt(0).toUpperCase()}
+                    {/* Gradient border wrapper */}
+                    <div className="absolute -inset-[2px] rounded-2xl bg-gradient-to-br from-orange-400 via-amber-400 to-orange-500 opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+
+                    {/* Card */}
+                    <div className="relative bg-background rounded-2xl p-6 h-full flex flex-col">
+                      {/* Featured badge */}
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-orange-500 bg-orange-500/10 px-2.5 py-1 rounded-full">
+                          <Trophy className="w-3 h-3" />
+                          Featured
+                        </span>
+                        <span className="text-[11px] font-medium text-muted-foreground">
+                          #{index + 1}
                         </span>
                       </div>
 
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-sm text-foreground truncate group-hover:text-orange-500 transition-colors">
+                      {/* Logo + Name */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <div
+                          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: (startup.logoColor || '#F97316') + '18' }}
+                        >
+                          <span className="text-lg font-bold" style={{ color: startup.logoColor || '#F97316' }}>
+                            {startup.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-base text-foreground truncate group-hover:text-orange-500 transition-colors">
                             {startup.name}
                           </h3>
                           <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
                             {startup.category}
                           </span>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium hidden sm:inline-flex">
-                            {startup.stage}
-                          </span>
                         </div>
-                        <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
-                          {startup.tagline}
-                        </p>
                       </div>
 
-                      {/* Right side — star + link */}
-                      <div className="flex items-center gap-4 shrink-0">
+                      {/* Tagline */}
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-5 flex-1">
+                        {startup.tagline}
+                      </p>
+
+                      {/* Footer: stars + link */}
+                      <div className="flex items-center justify-between pt-4 border-t border-border">
                         <button
                           onClick={() => handleVote(startup.slug)}
-                          className={`flex items-center gap-1 transition-colors ${
+                          className={`flex items-center gap-1.5 transition-colors ${
                             votedStartups.has(startup.slug)
                               ? 'text-orange-500'
                               : 'text-muted-foreground hover:text-orange-500'
                           }`}
                         >
                           <Star className={`w-4 h-4 ${votedStartups.has(startup.slug) ? 'fill-orange-500' : ''}`} />
-                          <span className="text-xs font-semibold tabular-nums">{startup.upvotes}</span>
+                          <span className="text-sm font-semibold tabular-nums">{startup.upvotes}</span>
                         </button>
                         <a
                           href={startup.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-orange-500 transition-colors"
+                          className="inline-flex items-center gap-1.5 text-xs font-medium text-orange-500 hover:text-orange-600 transition-colors"
                         >
+                          Visit
                           <ExternalLink className="w-3.5 h-3.5" />
                         </a>
                       </div>
                     </div>
+
+                    {/* Subtle glow on hover */}
+                    <div className="absolute -inset-4 rounded-3xl bg-orange-500/0 group-hover:bg-orange-500/5 transition-all duration-300 -z-10 blur-xl" />
                   </motion.div>
                 ))}
-              </AnimatePresence>
+              </div>
             </div>
-          )}
+          </section>
+        )}
 
-          {/* Load more hint */}
-          {!loading && displayedStartups.length > 0 && (
-            <div className="mt-10 text-center">
-              <p className="text-xs text-muted-foreground">
-                Showing {displayedStartups.length} of {filteredStartups.length} startups
+        {/* =============================================
+            Trending Startups Section
+            ============================================= */}
+        <section id="startups" className="py-16 sm:py-20">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Section heading */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4 }}
+              className="mb-8"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Zap className="w-4 h-4 text-orange-500" />
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+                  Trending Startups
+                </h2>
+                {!loading && (
+                  <span className="text-sm text-muted-foreground font-normal ml-1">
+                    ({filteredStartups.length})
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Discover the latest and most popular startups in our community
               </p>
+            </motion.div>
+
+            {/* Toolbar — search + sort, clean row */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search startups..."
+                  className="pl-10 h-10 text-sm text-foreground rounded-xl"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+              <Select value={sort} onValueChange={setSort}>
+                <SelectTrigger className="w-[130px] h-10 text-sm rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="popular">Most Stars</SelectItem>
+                  <SelectItem value="newest">Newest</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-xl shrink-0"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+              </Button>
             </div>
-          )}
+
+            {/* Expandable filters */}
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-6 flex flex-wrap items-center gap-2"
+                >
+                  <Select value={selectedCategory} onValueChange={v => setSelectedCategory(v)}>
+                    <SelectTrigger className="w-[150px] h-9 text-xs rounded-lg">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map(c => (
+                        <SelectItem key={c.name} value={c.name}>
+                          {getCategoryIcon(c.name)} {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={selectedStage} onValueChange={v => setSelectedStage(v)}>
+                    <SelectTrigger className="w-[120px] h-9 text-xs rounded-lg">
+                      <SelectValue placeholder="Stage" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Stages</SelectItem>
+                      <SelectItem value="Pre-seed">Pre-seed</SelectItem>
+                      <SelectItem value="Seed">Seed</SelectItem>
+                      <SelectItem value="Series A">Series A</SelectItem>
+                      <SelectItem value="Series B">Series B</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {(selectedCategory !== 'all' || selectedStage !== 'all' || search) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => { setSelectedCategory('all'); setSelectedStage('all'); setSearch('') }}
+                    >
+                      <X className="w-3 h-3 mr-1" />
+                      Clear
+                    </Button>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Startups Grid — single column, wider cards, more space */}
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />
+                ))}
+              </div>
+            ) : displayedStartups.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-muted-foreground text-sm">No startups found.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <AnimatePresence>
+                  {displayedStartups.map((startup) => (
+                    <motion.div
+                      key={startup.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="group rounded-2xl border border-border hover:border-orange-500/30 transition-all duration-200 p-5"
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Logo */}
+                        <div
+                          className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: (startup.logoColor || '#F97316') + '18' }}
+                        >
+                          <span className="text-sm font-bold" style={{ color: startup.logoColor || '#F97316' }}>
+                            {startup.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-sm text-foreground truncate group-hover:text-orange-500 transition-colors">
+                              {startup.name}
+                            </h3>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                              {startup.category}
+                            </span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium hidden sm:inline-flex">
+                              {startup.stage}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
+                            {startup.tagline}
+                          </p>
+                        </div>
+
+                        {/* Right side — star + link */}
+                        <div className="flex items-center gap-4 shrink-0">
+                          <button
+                            onClick={() => handleVote(startup.slug)}
+                            className={`flex items-center gap-1 transition-colors ${
+                              votedStartups.has(startup.slug)
+                                ? 'text-orange-500'
+                                : 'text-muted-foreground hover:text-orange-500'
+                            }`}
+                          >
+                            <Star className={`w-4 h-4 ${votedStartups.has(startup.slug) ? 'fill-orange-500' : ''}`} />
+                            <span className="text-xs font-semibold tabular-nums">{startup.upvotes}</span>
+                          </button>
+                          <a
+                            href={startup.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-orange-500 transition-colors"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+
+            {/* Load more hint */}
+            {!loading && displayedStartups.length > 0 && (
+              <div className="mt-10 text-center">
+                <p className="text-xs text-muted-foreground">
+                  Showing {displayedStartups.length} of {filteredStartups.length} startups
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* =============================================
+            Sponsors Section
+            ============================================= */}
+        <section className="py-16 sm:py-20 border-t border-border">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4 }}
+              className="text-center"
+            >
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-8">
+                Trusted by
+              </p>
+
+              {/* Sponsor logos row */}
+              <div className="flex items-center justify-center gap-8 sm:gap-14 md:gap-16 flex-wrap">
+                {sponsors.map((sponsor) => (
+                  <div
+                    key={sponsor.name}
+                    className="group flex flex-col items-center gap-2 transition-opacity duration-300 opacity-40 hover:opacity-100 dark:opacity-20 dark:hover:opacity-60"
+                  >
+                    {/* Rounded square with initials */}
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold bg-muted"
+                      style={{
+                        color: 'var(--foreground)',
+                      }}
+                    >
+                      <span className="text-xl">{sponsor.initials}</span>
+                    </div>
+                    <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                      {sponsor.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* =============================================
+            CTA — Ready to launch?
+            ============================================= */}
+        <section className="py-16 sm:py-20">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 via-orange-500 to-amber-500 p-8 sm:p-12 text-center"
+            >
+              {/* Background decoration */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
+                <div className="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-amber-300/10 blur-3xl" />
+              </div>
+
+              <div className="relative z-10">
+                <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3">
+                  Ready to launch?
+                </h2>
+                <p className="text-sm sm:text-base text-white/80 max-w-md mx-auto mb-8">
+                  Join thousands of startups getting discovered by investors, early adopters, and the tech community.
+                </p>
+                <Link href="/submit">
+                  <Button
+                    size="lg"
+                    className="bg-white text-orange-600 hover:bg-white/90 font-semibold rounded-xl h-12 px-8 text-sm"
+                  >
+                    Submit your startup
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          </div>
         </section>
       </main>
 
@@ -373,7 +586,7 @@ export default function Home() {
                 <Rocket className="w-2.5 h-2.5 text-white" />
               </div>
               <span className="text-xs text-muted-foreground">
-                Revolaunch &middot; Where startups begin
+                &copy; {new Date().getFullYear()} Revolaunch &middot; Where startups begin
               </span>
             </div>
             <div className="flex items-center gap-5 text-xs text-muted-foreground">

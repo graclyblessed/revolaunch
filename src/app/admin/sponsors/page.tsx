@@ -125,9 +125,13 @@ export default function AdminSponsorsPage() {
         body: JSON.stringify(body),
       })
 
+      const data = await res.json()
+
       if (res.ok) {
         resetForm()
         fetchSponsors()
+      } else {
+        alert(data.error || 'Failed to save sponsor')
       }
     } catch (err) {
       console.error('Failed to save sponsor:', err)

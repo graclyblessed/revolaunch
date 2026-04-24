@@ -77,7 +77,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { id, ...updateData } = body
+    const { id, startsAt, expiresAt, ...updateData } = body
 
     if (!id) {
       return NextResponse.json({ error: 'Sponsor ID is required' }, { status: 400 })
@@ -85,7 +85,11 @@ export async function PATCH(request: NextRequest) {
 
     const sponsor = await db.sponsorSlot.update({
       where: { id },
-      data: updateData,
+      data: {
+        ...updateData,
+        ...(startsAt && { startsAt: new Date(startsAt) }),
+        ...(expiresAt && { expiresAt: new Date(expiresAt) }),
+      },
     })
 
     return NextResponse.json({ success: true, sponsor })

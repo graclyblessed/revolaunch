@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
@@ -63,6 +63,8 @@ function SubmitPageContent() {
   const [badgeVerified, setBadgeVerified] = useState(false)
   const [verifyingBadge, setVerifyingBadge] = useState(false)
   const [copiedBadge, setCopiedBadge] = useState<string | null>(null)
+  const [fetchingMeta, setFetchingMeta] = useState(false)
+  const metaFetchedRef = useRef<string | null>(null)
 
   // Plan hook for launch enforcement
   const { canLaunch, getSlotsRemaining, recordLaunch, serverSlots, loaded: planLoaded } = usePlan()
@@ -82,6 +84,39 @@ function SubmitPageContent() {
   const needsBadgeStep = selectedTier === 'free' && submissionSettings?.freeListingsEnabled && submissionSettings?.backlinkRequired
   const totalSteps = needsBadgeStep ? 4 : 3
   const progress = (step / totalSteps) * 100
+
+  // Auto-fetch meta description + title when URL is entered
+  const handleWebsiteBlur = useCallback(async (url: string) => {
+    if (!url.trim()) return
+    // Avoid re-fetching the same URL
+    if (metaFetchedRef.current === url.trim()) return
+
+    setFetchingMeta(true)
+    try {
+      const res = await fetch('/api/fetch-meta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim() }),
+      })
+      const data = await res.json()
+
+      if (res.ok && data.tagline) {
+        metaFetchedRef.current = url.trim()
+        setStartup(prev => ({
+          ...prev,
+          // Only auto-fill tagline if user hasn't typed one yet
+          tagline: prev.tagline || data.tagline,
+          // Only auto-fill description if user hasn't typed one yet
+          description: prev.description || data.description || '',
+        }))
+        toast.success('Auto-filled from your website')
+      }
+    } catch {
+      // Silently fail — user can type manually
+    } finally {
+      setFetchingMeta(false)
+    }
+  }, [])
 
   const handleProfileNext = () => {
     if (!profile.firstName || !profile.lastName) {
@@ -566,9 +601,17 @@ function SubmitPageContent() {
                             placeholder="example.com"
                             value={startup.website}
                             onChange={e => setStartup({ ...startup, website: e.target.value })}
+                            onBlur={() => handleWebsiteBlur(startup.website)}
+                            disabled={fetchingMeta}
                             className="pl-9 input-bg input-bg-focus text-foreground h-10 rounded-lg"
                           />
+                          {fetchingMeta && (
+                            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-orange-500" />
+                          )}
                         </div>
+                        <p className="text-[10px] text-muted-foreground">
+                          {fetchingMeta ? 'Fetching details from your website...' : 'We\'ll auto-fill your tagline and description from your site'}
+                        </p>
                       </div>
                     </div>
 

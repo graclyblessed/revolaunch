@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import {
   Rocket, User, Star, Trophy, ChevronRight, ChevronLeft, Loader2,
-  ExternalLink, Sparkles, Camera, X, Linkedin, Twitter, Globe
+  ExternalLink, Sparkles, Camera, X, Linkedin, Twitter, Globe, Zap, Check, Crown
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import Header from '@/components/Header'
+import { LAUNCH_TIERS, type LaunchTier } from '@/lib/launch-tiers'
 
 const categories = ['AI', 'SaaS', 'Finance', 'Developer Tools', 'Productivity', 'Marketing', 'Business', 'Healthcare', 'Education', 'Other']
 const stages = ['Pre-seed', 'Seed', 'Series A', 'Series B', 'Growth']
@@ -30,6 +31,7 @@ export default function SubmitPage() {
     name: '', website: '', tagline: '', description: '', category: '', stage: 'Pre-seed',
     teamSize: '1-5', foundedYear: '', country: '', email: ''
   })
+  const [selectedTier, setSelectedTier] = useState<LaunchTier>('free')
 
   const totalSteps = 3
   const progress = (step / totalSteps) * 100
@@ -68,10 +70,11 @@ export default function SubmitPage() {
           country: startup.country,
           email: startup.email,
           twitter: profile.twitter || null,
+          tier: selectedTier,
         }),
       })
       if (res.ok) {
-        router.push(`/launch-confirmation?name=${encodeURIComponent(startup.name)}&url=${encodeURIComponent(startup.website)}&founder=${encodeURIComponent(profile.firstName + ' ' + profile.lastName)}&email=${encodeURIComponent(startup.email || '')}`)
+        router.push(`/launch-confirmation?name=${encodeURIComponent(startup.name)}&url=${encodeURIComponent(startup.website)}&founder=${encodeURIComponent(profile.firstName + ' ' + profile.lastName)}&email=${encodeURIComponent(startup.email || '')}&tier=${encodeURIComponent(selectedTier)}`)
       } else {
         toast.error('Failed to submit startup')
       }
@@ -499,6 +502,42 @@ export default function SubmitPage() {
                         onChange={e => setStartup({ ...startup, email: e.target.value })}
                         className="input-bg input-bg-focus text-foreground h-10 rounded-lg"
                       />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-foreground mb-2 block">
+                        Choose Your Launch Plan
+                        <Link href="/pricing" className="ml-2 text-orange-500 hover:text-orange-400 text-[10px]">View all plans</Link>
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {(['free', 'premium', 'premium-plus', 'seo-growth'] as LaunchTier[]).map(key => {
+                          const tier = LAUNCH_TIERS[key]
+                          const isSelected = selectedTier === key
+                          return (
+                            <button
+                              key={key}
+                              type="button"
+                              onClick={() => setSelectedTier(key)}
+                              className={`relative rounded-xl border-2 p-3 text-left transition-all ${
+                                isSelected
+                                  ? `${tier.borderColor} bg-muted/30`
+                                  : 'border-border hover:border-muted-foreground/30'
+                              }`}
+                            >
+                              {isSelected && (
+                                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center">
+                                  <Check className="w-3 h-3 text-white" />
+                                </div>
+                              )}
+                              <div className="text-lg mb-1">{tier.icon}</div>
+                              <p className="text-xs font-semibold text-foreground">{tier.name}</p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                {tier.price === 0 ? 'Free' : `$${tier.price}/launch`}
+                              </p>
+                            </button>
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
 

@@ -16,6 +16,9 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Header from '@/components/Header'
 import StartupLogo from '@/components/StartupLogo'
+import FollowButton from '@/components/FollowButton'
+import { useFollowing } from '@/hooks/use-following'
+import type { FollowingActivity } from '@/hooks/use-following'
 import {
   ChartContainer,
   ChartTooltip,
@@ -72,6 +75,7 @@ const defaultProfile = {
 const sidebarItems = [
   { name: 'Dashboard', icon: LayoutDashboard },
   { name: 'Inbox', icon: Inbox },
+  { name: 'Followed Founders', icon: Users },
   { name: 'My Startups', icon: Rocket },
   { name: 'My Profile', icon: Users },
   { name: 'My Reviews', icon: Star },
@@ -139,6 +143,9 @@ export default function DashboardPage() {
     { id: 'ra3', name: 'Lin W.', date: new Date(Date.now() - 432000000).toISOString(), earned: 25 },
   ]))
 
+  // Follow hook
+  const { isFollowing, toggleFollow, getFollowerCount, getFormattedFollowerCount, getActivityFeed, getFollowedStartups, followedIds } = useFollowing()
+
   // UI toggles
   const [expandedMsg, setExpandedMsg] = useState<string | null>(null)
   const [editingStartup, setEditingStartup] = useState<string | null>(null)
@@ -190,6 +197,7 @@ export default function DashboardPage() {
     if (name === 'My Reviews') return String(reviews.length)
     if (name === 'My Jobs') return String(jobs.length)
     if (name === 'My Signals') return String(signals.length)
+    if (name === 'Followed Founders' && followedIds.length > 0) return String(followedIds.length)
     return undefined
   }
 
@@ -379,7 +387,144 @@ export default function DashboardPage() {
     </motion.div>
   )
 
-  // ─── 2. Inbox ───
+  // ─── 2. Followed Founders ───
+  const renderFollowedFounders = () => {
+    const followedStartups = getFollowedStartups(fallbackStartups)
+    const activityFeed = getActivityFeed()
+
+    const activityIcons: Record<string, string> = {
+      launch: '🚀',
+      update: '🔄',
+      milestone: '🎯',
+      perk: '🎁',
+      funding: '💰',
+    }
+
+    return (
+      <motion.div {...fadeIn} className="space-y-6">
+        <div>
+          <h1 className="text-xl font-bold text-foreground mb-1">Followed Founders</h1>
+          <p className="text-xs text-muted-foreground">Track {followedStartups.length} startup{followedStartups.length !== 1 ? 's' : ''} and their latest activity</p>
+        </div>
+
+        {/* Follow stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl border subtle-border surface p-4">
+            <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center mb-2">
+              <Users className="w-4 h-4 text-orange-500" />
+            </div>
+            <p className="text-lg font-bold text-foreground">{followedStartups.length}</p>
+            <p className="text-[10px] text-muted-foreground">Following</p>
+          </div>
+          <div className="rounded-xl border subtle-border surface p-4">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-2">
+              <Zap className="w-4 h-4 text-emerald-500" />
+            </div>
+            <p className="text-lg font-bold text-foreground">{activityFeed.length}</p>
+            <p className="text-[10px] text-muted-foreground">Recent Updates</p>
+          </div>
+        </div>
+
+        {/* Followed startups list */}
+        {followedStartups.length > 0 ? (
+          <div className="rounded-xl border subtle-border surface overflow-hidden">
+            <div className="flex items-center gap-2 p-4 border-b subtle-border">
+              <Users className="w-4 h-4 text-orange-500" />
+              <h2 className="text-sm font-semibold text-foreground">Your Following List</h2>
+            </div>
+            <div className="divide-y divide-border">
+              <AnimatePresence>
+                {followedStartups.map(s => (
+                  <motion.div key={s.id} {...scaleIn} layout className="flex items-center gap-3 p-3 px-4">
+                    <StartupLogo name={s.name} logo={s.logo} website={s.website} logoColor={s.logoColor} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
+                      <div className="flex items-center gap-2 text-[10px] text-faint">
+                        <span>{s.category}</span>
+                        <span>&middot;</span>
+                        <span>{getFormattedFollowerCount(s.id)} followers</span>
+                      </div>
+                    </div>
+                    <FollowButton
+                      isFollowing={true}
+                      followerCount={getFollowerCount(s.id)}
+                      onToggle={() => toggleFollow(s.id)}
+                      size="sm"
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border subtle-border surface p-12 text-center">
+            <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <h2 className="text-sm font-medium text-foreground mb-1">Not following anyone yet</h2>
+            <p className="text-xs text-muted-foreground mb-4">Follow startup founders to get updates on their progress</p>
+            <Link href="/"><Button className="bg-orange-500 hover:bg-orange-600 text-white text-sm h-9 rounded-lg"><Plus className="w-4 h-4 mr-1.5" />Browse Startups</Button></Link>
+          </div>
+        )}
+
+        {/* Activity feed */}
+        {activityFeed.length > 0 && (
+          <div className="rounded-xl border subtle-border surface overflow-hidden">
+            <div className="flex items-center gap-2 p-4 border-b subtle-border">
+              <TrendingUp className="w-4 h-4 text-orange-500" />
+              <h2 className="text-sm font-semibold text-foreground">Activity Feed</h2>
+            </div>
+            <div className="divide-y divide-border">
+              {activityFeed.map(activity => (
+                <div key={activity.id} className="flex items-start gap-3 p-3 px-4">
+                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="text-sm">{activityIcons[activity.type] || '📌'}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-foreground">
+                      <span className="font-semibold">{activity.startupName}</span>{' '}
+                      {activity.type === 'launch' ? 'launched something new' :
+                       activity.type === 'update' ? 'posted an update' :
+                       activity.type === 'milestone' ? 'hit a milestone' :
+                       activity.type === 'perk' ? 'released a new perk' :
+                       activity.type === 'funding' ? 'announced funding' : 'shared news'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{activity.message}</p>
+                    <p className="text-[10px] text-faint mt-1">{fmtRelative(activity.timestamp)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Discover more startups to follow */}
+        <div className="rounded-xl border subtle-border surface p-6">
+          <h2 className="text-sm font-semibold text-foreground mb-3">Discover Founders to Follow</h2>
+          <div className="space-y-2">
+            {fallbackStartups
+              .filter(s => !isFollowing(s.id))
+              .slice(0, 5)
+              .map(s => (
+                <div key={s.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
+                  <StartupLogo name={s.name} logo={s.logo} website={s.website} logoColor={s.logoColor} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-foreground truncate">{s.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{s.category} &middot; {getFormattedFollowerCount(s.id)} followers</p>
+                  </div>
+                  <FollowButton
+                    isFollowing={false}
+                    followerCount={getFollowerCount(s.id)}
+                    onToggle={() => toggleFollow(s.id)}
+                    size="sm"
+                  />
+                </div>
+              ))}
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
+
+  // ─── 3. Inbox ───
   const renderInbox = () => {
     const markAllRead = () => {
       const updated = messages.map(m => ({ ...m, read: true }))
@@ -437,7 +582,7 @@ export default function DashboardPage() {
     )
   }
 
-  // ─── 3. My Startups ───
+  // ─── 4. My Startups ───
   const renderMyStartups = () => (
     <motion.div {...fadeIn} className="space-y-4">
       <div>
@@ -508,7 +653,7 @@ export default function DashboardPage() {
     </motion.div>
   )
 
-  // ─── 4. My Profile ───
+  // ─── 5. My Profile ───
   const renderMyProfile = () => {
     const initials = `${profile.firstName?.charAt(0) || ''}${profile.lastName?.charAt(0) || ''}`.toUpperCase() || '?'
     const handleSave = () => {
@@ -594,7 +739,7 @@ export default function DashboardPage() {
     )
   }
 
-  // ─── 5. My Reviews ───
+  // ─── 6. My Reviews ───
   const renderMyReviews = () => {
     const handleAddReview = () => {
       if (!reviewStartup || reviewRating === 0 || !reviewComment.trim()) {
@@ -684,7 +829,7 @@ export default function DashboardPage() {
     )
   }
 
-  // ─── 6. My Signals ───
+  // ─── 7. My Signals ───
   const renderMySignals = () => {
     const addSignal = (startup: any) => {
       if (signals.find(s => s.id === startup.id)) return
@@ -766,7 +911,7 @@ export default function DashboardPage() {
     )
   }
 
-  // ─── 7. My Jobs ───
+  // ─── 8. My Jobs ───
   const renderMyJobs = () => {
     const handlePostJob = () => {
       if (!jobForm.title || !jobForm.company) { toast.error('Title and company are required'); return }
@@ -881,7 +1026,7 @@ export default function DashboardPage() {
     )
   }
 
-  // ─── 8. My Perks ───
+  // ─── 9. My Perks ───
   const renderMyPerks = () => {
     const toggleClaim = (perkId: string) => {
       if (claimedPerks.includes(perkId)) {
@@ -928,7 +1073,7 @@ export default function DashboardPage() {
     )
   }
 
-  // ─── 9. My Affiliate ───
+  // ─── 10. My Affiliate ───
   const renderMyAffiliate = () => {
     const refLink = `https://revolaunch.net/?ref=${affiliateCode}`
     const copyLink = () => {
@@ -997,7 +1142,7 @@ export default function DashboardPage() {
     )
   }
 
-  // ─── 10. Content Scheduler ───
+  // ─── 11. Content Scheduler ───
   const renderContentScheduler = () => {
     const weekDays = getWeekDays()
     const handleAddContent = () => {
@@ -1114,7 +1259,7 @@ export default function DashboardPage() {
     )
   }
 
-  // ─── 11. Earn $25 ───
+  // ─── 12. Earn $25 ───
   const renderEarn25 = () => {
     const refLink = `https://revolaunch.net/?ref=${affiliateCode}`
     const copyLink = () => {
@@ -1219,6 +1364,7 @@ export default function DashboardPage() {
     switch (activeItem) {
       case 'Dashboard': return renderDashboard()
       case 'Inbox': return renderInbox()
+      case 'Followed Founders': return renderFollowedFounders()
       case 'My Startups': return renderMyStartups()
       case 'My Profile': return renderMyProfile()
       case 'My Reviews': return renderMyReviews()

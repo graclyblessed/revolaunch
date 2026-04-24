@@ -16,6 +16,8 @@ import {
 import { toast } from 'sonner'
 import Header from '@/components/Header'
 import StartupLogo from '@/components/StartupLogo'
+import FollowButton from '@/components/FollowButton'
+import { useFollowing } from '@/hooks/use-following'
 import {
   fallbackStartups, fallbackStats,
   fallbackCategories, getCategoryIcon,
@@ -43,6 +45,7 @@ export default function Home() {
   const [selectedStage, setSelectedStage] = useState('all')
   const [sort, setSort] = useState('popular')
   const [showFilters, setShowFilters] = useState(false)
+  const { isFollowing, toggleFollow, getFollowerCount } = useFollowing()
 
   useEffect(() => {
     async function loadData() {
@@ -448,8 +451,14 @@ export default function Home() {
                           </p>
                         </div>
 
-                        {/* Right side — star + link */}
-                        <div className="flex items-center gap-4 shrink-0">
+                        {/* Right side — star + follow + link */}
+                        <div className="flex items-center gap-3 shrink-0">
+                          <FollowButton
+                            isFollowing={isFollowing(startup.id)}
+                            followerCount={getFollowerCount(startup.id)}
+                            onToggle={() => toggleFollow(startup.id)}
+                            size="sm"
+                          />
                           <button
                             onClick={() => handleVote(startup.slug)}
                             className={`flex items-center gap-1 transition-colors ${

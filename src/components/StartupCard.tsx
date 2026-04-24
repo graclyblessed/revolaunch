@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import type { Startup } from '@/lib/fallback-data'
 import { getCategoryIcon, getCategoryColor, getStageColor } from '@/lib/fallback-data'
 import StartupLogo from '@/components/StartupLogo'
+import FollowButton from '@/components/FollowButton'
 
 interface StartupCardProps {
   startup: Startup
@@ -13,9 +14,13 @@ interface StartupCardProps {
   onVote?: (slug: string) => void
   isVoted?: boolean
   compact?: boolean
+  // Follow props
+  isFollowing?: boolean
+  followerCount?: number
+  onToggleFollow?: () => void
 }
 
-export default function StartupCard({ startup, rank, onVote, isVoted, compact }: StartupCardProps) {
+export default function StartupCard({ startup, rank, onVote, isVoted, compact, isFollowing, followerCount, onToggleFollow }: StartupCardProps) {
 
   const medals: Record<number, { emoji: string; bg: string }> = {
     1: { emoji: '🥇', bg: 'bg-yellow-500/20' },
@@ -93,6 +98,15 @@ export default function StartupCard({ startup, rank, onVote, isVoted, compact }:
                   {startup.country.length > 12 ? startup.country.split(' ')[0] : startup.country}
                 </span>
               )}
+              {/* Follow button inline */}
+              {onToggleFollow && typeof isFollowing === 'boolean' && typeof followerCount === 'number' && (
+                <FollowButton
+                  isFollowing={isFollowing}
+                  followerCount={followerCount}
+                  onToggle={onToggleFollow}
+                  size="sm"
+                />
+              )}
             </div>
           </div>
 
@@ -114,7 +128,12 @@ export default function StartupCard({ startup, rank, onVote, isVoted, compact }:
   )
 }
 
-export function StartupCardFull({ startup }: { startup: Startup }) {
+export function StartupCardFull({ startup, isFollowing, followerCount, onToggleFollow }: {
+  startup: Startup
+  isFollowing?: boolean
+  followerCount?: number
+  onToggleFollow?: () => void
+}) {
 
   return (
     <motion.div
@@ -174,6 +193,16 @@ export function StartupCardFull({ startup }: { startup: Startup }) {
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-300 font-medium">
                   {startup._count.perks} perk{startup._count.perks > 1 ? 's' : ''}
                 </span>
+              )}
+              {/* Follow button */}
+              {onToggleFollow && typeof isFollowing === 'boolean' && typeof followerCount === 'number' && (
+                <FollowButton
+                  isFollowing={isFollowing}
+                  followerCount={followerCount}
+                  onToggle={onToggleFollow}
+                  size="sm"
+                  className="ml-auto"
+                />
               )}
               <a
                 href={startup.website}

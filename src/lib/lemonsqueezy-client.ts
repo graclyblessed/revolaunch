@@ -22,6 +22,13 @@ export const LAUNCH_VARIANTS = {
   'seo-growth': process.env.LEMONSQUEEZY_VARIANT_SEO_GROWTH || '',
 }
 
+// ─── Sponsor Product Variants (one-time) ───
+export const SPONSOR_VARIANTS = {
+  '1month': process.env.LEMONSQUEEZY_VARIANT_SPONSOR_1M || '',
+  '3months': process.env.LEMONSQUEEZY_VARIANT_SPONSOR_3M || '',
+  '12months': process.env.LEMONSQUEEZY_VARIANT_SPONSOR_12M || '',
+}
+
 // Legacy subscription variants (kept for backward compatibility)
 export const VARIANTS = {
   monthly: process.env.LEMONSQUEEZY_VARIANT_MONTHLY || '',
@@ -35,6 +42,15 @@ export function getVariantForTier(tier: string): string {
     case 'premium': return LAUNCH_VARIANTS.premium
     case 'premium-plus': return LAUNCH_VARIANTS['premium-plus']
     case 'seo-growth': return LAUNCH_VARIANTS['seo-growth']
+    default: return ''
+  }
+}
+
+export function getVariantForSponsorPlan(plan: string): string {
+  switch (plan) {
+    case '1month': return SPONSOR_VARIANTS['1month']
+    case '3months': return SPONSOR_VARIANTS['3months']
+    case '12months': return SPONSOR_VARIANTS['12months']
     default: return ''
   }
 }

@@ -63,3 +63,17 @@ model Subscriber {
   email     String   @unique
   createdAt DateTime @default(now())
 }
+
+model SponsorSlot {
+  id          String   @id @default(cuid())
+  companyName String
+  logo        String?
+  website     String
+  tagline     String?
+  plan        String   @default("1month") // 1month, 3months, 12months
+  status      String   @default("active") // active, expired, paused
+  startsAt    DateTime @default(now())
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

@@ -498,23 +498,33 @@ export default function Home() {
             {/* Floating Right Sidebar — Sponsors */}
             <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
               <div className="sticky top-20 space-y-4">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Sponsors
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    Sponsors
+                  </p>
+                  <Link href="/sponsor" className="text-[10px] text-orange-500 hover:text-orange-400 font-medium transition-colors">
+                    Become one
+                  </Link>
+                </div>
                 {[...Array(4)].map((_, i) => (
                   <div
                     key={i}
-                    className="w-full aspect-[3/1] rounded-xl border-2 border-dashed border-border flex items-center justify-center hover:border-orange-500/30 transition-colors"
+                    className="w-full aspect-[3/1] rounded-xl border-2 border-dashed border-border flex items-center justify-center hover:border-orange-500/30 transition-colors group cursor-pointer"
+                    onClick={() => window.location.href = '/sponsor'}
                   >
-                    <span className="text-[11px] text-muted-foreground/40 font-medium">Your Logo</span>
+                    <span className="text-[11px] text-muted-foreground/40 font-medium group-hover:text-orange-500/50 transition-colors">Your Logo</span>
                   </div>
                 ))}
-                <p className="text-[11px] text-muted-foreground/50 leading-relaxed">
-                  Advertise to thousands of founders &amp; investors.{' '}
-                  <a href="mailto:hello@revolaunch.net" className="text-orange-500 hover:text-orange-600 transition-colors font-medium">
-                    Contact us
-                  </a>
-                </p>
+                <div className="rounded-lg border subtle-border bg-muted/30 p-3">
+                  <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
+                    Get your brand seen by thousands of founders, investors &amp; tech enthusiasts every month.
+                  </p>
+                  <Link href="/sponsor">
+                    <span className="text-[11px] font-semibold text-orange-500 hover:text-orange-400 transition-colors">
+                      Learn more →
+                    </span>
+                  </Link>
+                </div>
               </div>
             </aside>
             </div>

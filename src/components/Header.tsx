@@ -121,8 +121,8 @@ export default function Header() {
               </AnimatePresence>
             </div>
 
-            <Link href="/inside" className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted">
-              Inside
+            <Link href="/insight" className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted">
+              Insight
             </Link>
           </nav>
 
@@ -196,8 +196,8 @@ export default function Header() {
                   ))}
                 </div>
               </div>
-              <Link href="/inside" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
-                Inside
+              <Link href="/insight" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
+                Insight
               </Link>
               <div className="flex gap-2 pt-2 px-3">
                 <Link href="/submit" className="flex-1">

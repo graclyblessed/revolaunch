@@ -17,7 +17,7 @@ const sidebarItems = [
   { name: 'Startups', icon: Building2, href: '/admin/startups' },
   { name: 'Sponsors', icon: Megaphone, href: '/admin/sponsors' },
   { name: 'Subscribers', icon: Users, href: '/admin/subscribers' },
-  { name: 'Analytics', icon: BarChart3, href: '/inside' },
+  { name: 'Analytics', icon: BarChart3, href: '/insight' },
   { name: 'Settings', icon: Settings, href: '/admin/settings' },
 ]
 

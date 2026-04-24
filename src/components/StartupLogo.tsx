@@ -12,10 +12,10 @@ interface StartupLogoProps {
 }
 
 /**
- * Renders a startup logo with a 3-tier cascading fallback:
- * 1. Explicit logo URL from data (Clearbit)
- * 2. Google Favicon API (most reliable, always works)
- * 3. Colored letter fallback
+ * Renders a startup logo with a reliable fallback chain:
+ * 1. Google Favicon API (most reliable, works for any domain)
+ * 2. Clearbit logo (high quality when available)
+ * 3. Letter initial (always shown as background, never leaves blank space)
  */
 
 const sizeClasses = {
@@ -24,14 +24,7 @@ const sizeClasses = {
   lg: 'w-12 h-12 text-lg',
 }
 
-const imgSizes = {
-  sm: 20,
-  md: 24,
-  lg: 32,
-}
-
-/** Extract domain from a URL, keeping subdomains (e.g. dreamina.capcut.com stays as-is).
- *  Only strips 'www.' prefix. */
+/** Extract domain from a URL, strips 'www.' prefix */
 export function getDomain(website: string): string | null {
   if (!website) return null
   try {
@@ -57,46 +50,47 @@ export function getClearbitLogoUrl(website: string): string | null {
 }
 
 export default function StartupLogo({ name, logo, website, logoColor, size = 'md', className = '' }: StartupLogoProps) {
-  // Track which source failed: 0 = not tried yet, 1 = primary failed, 2 = secondary failed
+  // Track fallback: 0 = google favicon, 1 = clearbit, 2 = show letter only
   const [fallbackLevel, setFallbackLevel] = useState(0)
 
   const color = logoColor || '#F97316'
   const initial = name.charAt(0).toUpperCase()
 
-  // Build the secondary URL (Google Favicon) from website
-  const secondaryLogo = website ? getGoogleFaviconUrl(website) : null
+  // Source 1: Google Favicon (most reliable)
+  const googleFavicon = website ? getGoogleFaviconUrl(website) : null
+  // Source 2: Clearbit or explicit logo
+  const clearbitLogo = logo || (website ? getClearbitLogoUrl(website) : null)
 
-  // Determine current source
-  const primaryUrl = logo || (website ? getClearbitLogoUrl(website) : null)
-  const currentUrl = fallbackLevel === 0 ? primaryUrl : secondaryLogo
+  // Determine which URL to try based on fallback level
+  const currentUrl = fallbackLevel === 0 ? googleFavicon : clearbitLogo
   const showLetter = fallbackLevel >= 2 || !currentUrl
-
-  if (showLetter) {
-    return (
-      <div
-        className={`${sizeClasses[size]} rounded-xl flex items-center justify-center shrink-0 ${className}`}
-        style={{ backgroundColor: color + '22' }}
-      >
-        <span className="font-bold" style={{ color }}>
-          {initial}
-        </span>
-      </div>
-    )
-  }
 
   return (
     <div
-      className={`${sizeClasses[size]} rounded-xl flex items-center justify-center shrink-0 overflow-hidden bg-muted ${className}`}
+      className={`${sizeClasses[size]} rounded-xl flex items-center justify-center shrink-0 overflow-hidden relative ${className}`}
+      style={{ backgroundColor: color + '22' }}
     >
-      <img
-        src={currentUrl}
-        alt={`${name} logo`}
-        width={imgSizes[size]}
-        height={imgSizes[size]}
-        className="w-full h-full object-contain p-1.5"
-        onError={() => setFallbackLevel(prev => prev + 1)}
-        loading="lazy"
-      />
+      {/* Letter initial — always rendered as background, hidden when image loads */}
+      <span
+        className={`font-bold absolute ${!showLetter && currentUrl ? 'opacity-0' : 'opacity-100'}`}
+        style={{ color }}
+      >
+        {initial}
+      </span>
+
+      {/* Try to load image, fall back on error */}
+      {!showLetter && currentUrl && (
+        <img
+          src={currentUrl}
+          alt={`${name} logo`}
+          width={32}
+          height={32}
+          className="w-full h-full object-contain p-1.5 relative z-10"
+          onError={() => setFallbackLevel(prev => prev + 1)}
+          onLoad={() => setFallbackLevel(0)}
+          loading="lazy"
+        />
+      )}
     </div>
   )
 }

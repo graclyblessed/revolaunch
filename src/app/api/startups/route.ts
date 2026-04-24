@@ -7,7 +7,7 @@ function getLogoFromWebsite(website: string, existingLogo: string | null): strin
   if (!website) return null
   try {
     const domain = new URL(website).hostname.replace(/^www\./, '')
-    return `https://logo.clearbit.com/${domain}`
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
   } catch {
     return null
   }

@@ -27,8 +27,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const isLoginPage = pathname === '/admin/login'
 
   useEffect(() => {
+    // Skip auth check on the login page
+    if (isLoginPage) {
+      setLoading(false)
+      return
+    }
+
     fetch('/api/admin/auth/session')
       .then(res => {
         if (!res.ok) {
@@ -38,11 +45,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
       })
       .catch(() => router.push('/admin/login'))
-  }, [router])
+  }, [router, isLoginPage])
 
   const handleLogout = async () => {
     await fetch('/api/admin/auth/logout', { method: 'POST' })
     router.push('/admin/login')
+  }
+
+  // Login page renders without sidebar
+  if (isLoginPage) {
+    return <>{children}</>
   }
 
   if (loading) {

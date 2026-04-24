@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
-  // Exclude Prisma from the serverless bundle
-  serverExternalPackages: ["@prisma/client", "prisma"],
+  // External packages for Neon PostgreSQL + Prisma on Vercel serverless
+  serverExternalPackages: ["@prisma/client", "prisma", "@neondatabase/serverless", "ws"],
 };
 
 export default nextConfig;

@@ -14,7 +14,7 @@ async function main() {
         name: s.name,
         tagline: s.tagline,
         description: s.description || null,
-        logo: s.logo || null,
+        logo: null, // Don't store Clearbit URLs — client generates them dynamically
         website: s.website,
         twitter: s.twitter || null,
         linkedin: s.linkedin || null,
@@ -34,7 +34,7 @@ async function main() {
         slug: s.slug,
         tagline: s.tagline,
         description: s.description || null,
-        logo: s.logo || null,
+        logo: null, // Don't store Clearbit URLs — client generates them dynamically
         website: s.website,
         twitter: s.twitter || null,
         linkedin: s.linkedin || null,

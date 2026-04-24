@@ -2,12 +2,6 @@ import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { fallbackStartups, fallbackPerks } from '@/lib/fallback-data'
 
-function cleanLogo(logo: string | null): string | null {
-  if (!logo) return null
-  if (logo.includes('google.com/s2/favicons')) return null
-  return logo
-}
-
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ slug: string }> }
@@ -15,34 +9,20 @@ export async function GET(
   try {
     const { slug } = await params
 
-    // Try database first
-    const dbStartup = await db.startup.findUnique({
-      where: { slug },
-      include: { _count: { select: { votes: true, perks: true } }, perks: true },
-    }).catch(() => null)
-
-    if (dbStartup) {
+    // ALWAYS use verified fallback data first (real companies with real logos)
+    const startup = fallbackStartups.find(s => s.slug === slug)
+    if (startup) {
+      const perks = fallbackPerks[slug] || []
       return NextResponse.json({
         startup: {
-          ...dbStartup,
-          logo: cleanLogo(dbStartup.logo),
-        }
+          ...startup,
+          perks,
+          _count: { votes: startup.upvotes, perks: perks.length },
+        },
       })
     }
 
-    // Fallback: use static data
-    const startup = fallbackStartups.find(s => s.slug === slug)
-    if (!startup) return NextResponse.json({ error: 'Startup not found' }, { status: 404 })
-
-    const perks = fallbackPerks[slug] || []
-
-    return NextResponse.json({
-      startup: {
-        ...startup,
-        perks,
-        _count: { votes: startup.upvotes, perks: perks.length },
-      },
-    })
+    return NextResponse.json({ error: 'Startup not found' }, { status: 404 })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch startup' }, { status: 500 })
   }

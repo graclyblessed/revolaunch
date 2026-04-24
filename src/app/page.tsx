@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 import StartupLogo from '@/components/StartupLogo'
 import FollowButton from '@/components/FollowButton'
 import { useFollowing } from '@/hooks/use-following'
@@ -602,26 +603,7 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Footer — minimal */}
-      <footer className="border-t border-border mt-auto">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center">
-                <Rocket className="w-2.5 h-2.5 text-white" />
-              </div>
-              <span className="text-xs text-muted-foreground">
-                &copy; {new Date().getFullYear()} Revolaunch &middot; Where startups begin
-              </span>
-            </div>
-            <div className="flex items-center gap-5 text-xs text-muted-foreground">
-              <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
-              <Link href="/community" className="hover:text-foreground transition-colors">Community</Link>
-              <Link href="/submit" className="hover:text-foreground transition-colors">Launch</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

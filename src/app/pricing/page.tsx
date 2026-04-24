@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { LAUNCH_TIERS, type LaunchTier } from '@/lib/launch-tiers'
 import { isLemonSqueezyConfigured } from '@/lib/lemonsqueezy-client'
+import Footer from '@/components/Footer'
 
 const tierOrder: LaunchTier[] = ['free', 'premium', 'premium-plus', 'seo-growth']
 
@@ -382,6 +383,7 @@ export default function PricingPage() {
           </div>
         </motion.div>
       </div>
+      <Footer />
     </div>
   )
 }

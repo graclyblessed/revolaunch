@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/accordion'
 import { SPONSOR_PLANS, type SponsorPlan } from '@/lib/sponsor-plans'
 import { toast } from 'sonner'
+import Footer from '@/components/Footer'
 
 const plans = [SPONSOR_PLANS['1month'], SPONSOR_PLANS['3months'], SPONSOR_PLANS['12months']]
 
@@ -515,6 +516,7 @@ export default function SponsorPage() {
           </motion.div>
         </motion.section>
       </main>
+      <Footer />
     </div>
   )
 }

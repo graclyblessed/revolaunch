@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 import { fallbackStats } from '@/lib/fallback-data'
 import {
   ChartContainer,
@@ -294,6 +295,7 @@ export default function InsidePage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   )
 }

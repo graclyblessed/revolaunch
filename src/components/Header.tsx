@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Rocket, ChevronDown, Users, TrendingUp, BarChart3,
-  MessageSquare, Building2, Package, Briefcase, Handshake, Gift,
-  Calendar, PenSquare, LogIn, Menu, X, Globe
+  Building2, Briefcase, Handshake, Gift,
+  LogIn, Menu, X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import ThemeToggle from './ThemeToggle'
@@ -21,14 +21,8 @@ const communityItems = [
   { name: 'Affiliate Directory', icon: Users, href: '/community' },
 ]
 
-const growItems = [
-  { name: 'Add Startup', icon: Rocket, href: '/submit' },
-  { name: 'Content Scheduler', icon: Calendar, href: '/dashboard' },
-]
-
 export default function Header() {
   const [communityOpen, setCommunityOpen] = useState(false)
-  const [growOpen, setGrowOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
@@ -54,7 +48,7 @@ export default function Header() {
             {/* Community Dropdown */}
             <div className="relative">
               <button
-                onClick={() => { setCommunityOpen(!communityOpen); setGrowOpen(false) }}
+                onClick={() => setCommunityOpen(!communityOpen)}
                 className="flex items-center gap-1 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted"
               >
                 Community
@@ -86,40 +80,9 @@ export default function Header() {
               </AnimatePresence>
             </div>
 
-            {/* Grow Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => { setGrowOpen(!growOpen); setCommunityOpen(false) }}
-                className="flex items-center gap-1 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted"
-              >
-                Grow
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${growOpen ? 'rotate-180' : ''}`} />
-              </button>
-              <AnimatePresence>
-                {growOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 mt-1 w-48 rounded-xl border subtle-border popover-bg shadow-2xl shadow-black/10 dark:shadow-black/50 py-1 z-50"
-                    onMouseLeave={() => setGrowOpen(false)}
-                  >
-                    {growItems.map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                        onClick={() => setGrowOpen(false)}
-                      >
-                        <item.icon className="w-4 h-4 text-muted-foreground" />
-                        {item.name}
-                      </Link>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <Link href="/pricing" className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted">
+              Pricing
+            </Link>
 
             <Link href="/insight" className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted">
               Insight
@@ -196,6 +159,12 @@ export default function Header() {
                   ))}
                 </div>
               </div>
+              <Link href="/pricing" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
+                Pricing
+              </Link>
+              <Link href="/sponsor" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
+                Sponsor
+              </Link>
               <Link href="/insight" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
                 Insight
               </Link>

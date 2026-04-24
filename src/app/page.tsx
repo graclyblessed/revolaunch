@@ -38,6 +38,7 @@ export default function Home() {
   const [startups, setStartups] = useState<Startup[]>([])
   const [stats, setStats] = useState(fallbackStats)
   const [categories, setCategories] = useState(fallbackCategories)
+  const [sponsors, setSponsors] = useState<Array<{id:string,companyName:string,logo:string|null,website:string,tagline:string|null}>>([])
   const [loading, setLoading] = useState(true)
   const [votedStartups, setVotedStartups] = useState<Set<string>>(new Set())
   const [search, setSearch] = useState('')
@@ -50,15 +51,21 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [startupsRes, statsRes, categoriesRes] = await Promise.allSettled([
+        const [startupsRes, statsRes, categoriesRes, sponsorsRes] = await Promise.allSettled([
           fetch('/api/startups?limit=24&sort=popular').then(r => r.json()),
           fetch('/api/stats').then(r => r.json()),
           fetch('/api/categories').then(r => r.json()),
+          fetch('/api/sponsors').then(r => r.json()),
         ])
 
         const startupsData = startupsRes.status === 'fulfilled' ? startupsRes.value : {}
         const statsData = statsRes.status === 'fulfilled' ? statsRes.value : null
         const categoriesData = categoriesRes.status === 'fulfilled' ? categoriesRes.value : {}
+        const sponsorsData = sponsorsRes.status === 'fulfilled' ? sponsorsRes.value : null
+
+        if (sponsorsData && Array.isArray(sponsorsData.sponsors)) {
+          setSponsors(sponsorsData.sponsors.filter((s: {status:string}) => s.status === 'active'))
+        }
 
         if (Array.isArray(startupsData.startups) && startupsData.startups.length > 0) {
           setStartups(startupsData.startups)
@@ -506,7 +513,25 @@ export default function Home() {
                     Become one
                   </Link>
                 </div>
-                {[...Array(4)].map((_, i) => (
+                {sponsors.length > 0 ? sponsors.slice(0, 4).map((sponsor) => (
+                  <a
+                    key={sponsor.id}
+                    href={sponsor.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full aspect-[3/1] rounded-xl border border-border hover:border-orange-500/30 transition-all duration-200 group overflow-hidden"
+                  >
+                    <div className="w-full h-full flex items-center justify-center p-3 hover:bg-muted/30 transition-colors">
+                      {sponsor.logo ? (
+                        <img src={sponsor.logo} alt={sponsor.companyName} className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-orange-500 transition-colors truncate">
+                          {sponsor.companyName}
+                        </span>
+                      )}
+                    </div>
+                  </a>
+                )) : [...Array(4)].map((_, i) => (
                   <div
                     key={i}
                     className="w-full aspect-[3/1] rounded-xl border-2 border-dashed border-border flex items-center justify-center hover:border-orange-500/30 transition-colors group cursor-pointer"

@@ -4,19 +4,35 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Settings, Shield, Key, Database, Globe, Zap, ExternalLink,
-  Copy, CheckCircle2, AlertTriangle
+  Copy, CheckCircle2, AlertTriangle, BadgeCheck, TrendingUp
 } from 'lucide-react'
+import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'revolaunch.vercel.app'
+
+const LIGHT_BADGE_HTML = `<a href="https://${SITE_URL}" target="_blank" rel="noopener noreferrer"><img src="https://${SITE_URL}/api/badge?theme=light" alt="Listed on Revolaunch" width="220" height="48" /></a>`
+const DARK_BADGE_HTML = `<a href="https://${SITE_URL}" target="_blank" rel="noopener noreferrer"><img src="https://${SITE_URL}/api/badge?theme=dark" alt="Listed on Revolaunch" width="220" height="48" /></a>`
 
 export default function AdminSettingsPage() {
   const [session, setSession] = useState<{ email: string; role: string } | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+  const [submissionSettings, setSubmissionSettings] = useState<{
+    freeListingsEnabled: boolean
+    backlinkRequired: boolean
+    startupCount: number
+    threshold: number
+  } | null>(null)
 
   useEffect(() => {
     fetch('/api/admin/auth/session')
       .then(res => res.ok ? res.json() : null)
       .then(data => data?.authenticated ? setSession(data.user) : null)
+
+    fetch('/api/admin/submission-settings')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => data && setSubmissionSettings(data))
   }, [])
 
   const copyToClipboard = (text: string, label: string) => {
@@ -63,6 +79,115 @@ export default function AdminSettingsPage() {
         <h1 className="text-2xl font-bold text-foreground">Settings</h1>
         <p className="text-sm text-muted-foreground mt-1">Platform configuration and integrations</p>
       </div>
+
+      {/* Free Listings Configuration */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-xl border border-border surface p-5"
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp className="w-4 h-4 text-orange-500" />
+          <h3 className="text-sm font-semibold text-foreground">Free Listings Configuration</h3>
+        </div>
+
+        {submissionSettings ? (
+          <div className="space-y-5">
+            {/* Startup count progress */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-muted-foreground">Startups listed</span>
+                <span className="text-xs font-medium text-foreground">
+                  {submissionSettings.startupCount.toLocaleString()} / {submissionSettings.threshold.toLocaleString()}
+                </span>
+              </div>
+              <Progress value={(submissionSettings.startupCount / submissionSettings.threshold) * 100} className="h-2" />
+              <p className="text-[10px] text-muted-foreground mt-1.5">
+                {submissionSettings.freeListingsEnabled
+                  ? 'Free listings are now active. Users can submit startups for free with badge verification.'
+                  : `Free listings activate at ${submissionSettings.threshold.toLocaleString()} startups. ${(submissionSettings.threshold - submissionSettings.startupCount).toLocaleString()} more to go.`
+                }
+              </p>
+            </div>
+
+            {/* Backlink requirement */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+              <div className="flex items-center gap-3">
+                <BadgeCheck className="w-4 h-4 text-orange-500" />
+                <div>
+                  <p className="text-xs font-medium text-foreground">Require Backlink Badge</p>
+                  <p className="text-[10px] text-muted-foreground">Free submissions must add a Revolaunch badge</p>
+                </div>
+              </div>
+              <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                submissionSettings.backlinkRequired
+                  ? 'bg-green-500/10 text-green-400'
+                  : 'bg-yellow-500/10 text-yellow-400'
+              }`}>
+                {submissionSettings.backlinkRequired ? 'Enabled' : 'Disabled'}
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              To change this setting, update the <code className="text-orange-500 bg-orange-500/10 px-1 rounded">REVOLAUNCH_BACKLINK_REQUIRED</code> environment variable and redeploy.
+            </p>
+
+            {/* Badge previews */}
+            <div>
+              <p className="text-xs font-medium text-foreground mb-3">Badge Preview</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-lg border subtle-border bg-white">
+                  <p className="text-[10px] text-muted-foreground mb-2">Light Theme</p>
+                  <img src="/api/badge?theme=light" alt="Light badge" width={220} height={48} className="rounded" />
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] text-muted-foreground">HTML snippet</span>
+                      <button
+                        onClick={() => copyToClipboard(LIGHT_BADGE_HTML, 'light-html')}
+                        className="p-1 rounded hover:bg-muted transition-colors"
+                      >
+                        {copied === 'light-html' ? (
+                          <CheckCircle2 className="w-3 h-3 text-green-500" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                    <code className="text-[9px] text-muted-foreground break-all block max-h-12 overflow-y-auto bg-muted p-2 rounded">
+                      {LIGHT_BADGE_HTML}
+                    </code>
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg border subtle-border bg-[#1a1a1a]">
+                  <p className="text-[10px] text-neutral-400 mb-2">Dark Theme</p>
+                  <img src="/api/badge?theme=dark" alt="Dark badge" width={220} height={48} className="rounded" />
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] text-neutral-400">HTML snippet</span>
+                      <button
+                        onClick={() => copyToClipboard(DARK_BADGE_HTML, 'dark-html')}
+                        className="p-1 rounded hover:bg-neutral-800 transition-colors"
+                      >
+                        {copied === 'dark-html' ? (
+                          <CheckCircle2 className="w-3 h-3 text-green-500" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-neutral-400" />
+                        )}
+                      </button>
+                    </div>
+                    <code className="text-[9px] text-neutral-500 break-all block max-h-12 overflow-y-auto bg-neutral-900 p-2 rounded">
+                      {DARK_BADGE_HTML}
+                    </code>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center py-8">
+            <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+      </motion.div>
 
       {/* Admin Account */}
       <motion.div

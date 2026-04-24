@@ -118,7 +118,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { name, tagline, description, website, category, twitter, linkedin, country } = body
+    const { name, tagline, description, website, category, twitter, linkedin, country, stage, teamSize, foundedYear, email, tier } = body
 
     if (!name || !tagline || !website || !category) {
       return NextResponse.json(
@@ -153,7 +153,12 @@ export async function POST(request: Request) {
         twitter: twitter || null,
         linkedin: linkedin || null,
         category,
+        stage: stage || 'Pre-seed',
+        teamSize: teamSize || '1-5',
+        foundedYear: foundedYear ? parseInt(foundedYear, 10) : null,
         country: country || null,
+        email: email || null,
+        launchTier: tier || 'free',
       },
       include: {
         _count: { select: { votes: true, perks: true } },

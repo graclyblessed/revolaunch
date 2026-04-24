@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Rocket, User, Star, Trophy, ChevronRight, ChevronLeft, Loader2,
-  ExternalLink, Sparkles, Camera, X, Linkedin, Twitter, Globe, Zap, Check, Crown, Lock, Clock
+  ExternalLink, Sparkles, Camera, X, Linkedin, Twitter, Globe, Zap, Check, Crown, Lock, Clock, Copy, CheckCircle2, AlertCircle, ShieldCheck
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,6 +21,7 @@ import Link from 'next/link'
 
 const categories = ['AI', 'SaaS', 'Finance', 'Developer Tools', 'Productivity', 'Marketing', 'Business', 'Healthcare', 'Education', 'Other']
 const stages = ['Pre-seed', 'Seed', 'Series A', 'Series B', 'Growth']
+const SITE_URL = typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_SITE_URL || 'revolaunch.vercel.app') : 'revolaunch.vercel.app'
 
 export default function SubmitPage() {
   return (
@@ -52,19 +53,34 @@ function SubmitPageContent() {
     teamSize: '1-5', foundedYear: '', country: '', email: ''
   })
   const [selectedTier, setSelectedTier] = useState<LaunchTier>(preselectedTier)
+  const [submissionSettings, setSubmissionSettings] = useState<{
+    freeListingsEnabled: boolean
+    backlinkRequired: boolean
+    startupCount: number
+    threshold: number
+  } | null>(null)
+  const [badgeUrl, setBadgeUrl] = useState('')
+  const [badgeVerified, setBadgeVerified] = useState(false)
+  const [verifyingBadge, setVerifyingBadge] = useState(false)
+  const [copiedBadge, setCopiedBadge] = useState<string | null>(null)
 
   // Plan hook for launch enforcement
   const { canLaunch, getSlotsRemaining, recordLaunch, serverSlots, loaded: planLoaded } = usePlan()
 
-  // Read preselected tier from URL on mount
+  // Read preselected tier from URL on mount + fetch submission settings
   useEffect(() => {
     const tier = searchParams.get('tier') as LaunchTier
     if (tier && LAUNCH_TIERS[tier]) {
       setSelectedTier(tier)
     }
+
+    fetch('/api/admin/submission-settings')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => data && setSubmissionSettings(data))
   }, [searchParams])
 
-  const totalSteps = 3
+  const needsBadgeStep = selectedTier === 'free' && submissionSettings?.freeListingsEnabled && submissionSettings?.backlinkRequired
+  const totalSteps = needsBadgeStep ? 4 : 3
   const progress = (step / totalSteps) * 100
 
   const handleProfileNext = () => {
@@ -85,6 +101,12 @@ function SubmitPageContent() {
 
   const handleTierSelect = (tier: LaunchTier) => {
     setSelectedTier(tier)
+    // Reset badge state when switching tiers
+    if (tier !== 'free') {
+      setBadgeVerified(false)
+      setBadgeUrl('')
+      if (step === 4) setStep(3)
+    }
   }
 
   const handleSubmit = async () => {
@@ -134,7 +156,12 @@ function SubmitPageContent() {
       return
     }
 
-    // Free tier — proceed directly
+    // Free tier — check if badge verification needed
+    if (tierConfig.price === 0 && needsBadgeStep && !badgeVerified) {
+      setStep(4)
+      return
+    }
+
     proceedWithLaunch()
   }
 
@@ -173,6 +200,44 @@ function SubmitPageContent() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleVerifyBadge = async () => {
+    if (!badgeUrl.trim()) {
+      toast.error('Please enter a URL where you added our badge')
+      return
+    }
+
+    setVerifyingBadge(true)
+    try {
+      const res = await fetch('/api/verify-badge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: badgeUrl.trim() }),
+      })
+      const data = await res.json()
+
+      if (data.verified) {
+        setBadgeVerified(true)
+        toast.success('Badge verified successfully!')
+      } else {
+        setBadgeVerified(false)
+        toast.error(data.error || 'Badge not found. Please make sure the badge HTML is on the page and try again.')
+      }
+    } catch {
+      toast.error('Verification failed. Please try again.')
+    } finally {
+      setVerifyingBadge(false)
+    }
+  }
+
+  const copyBadgeHtml = (theme: 'light' | 'dark') => {
+    const html = theme === 'light'
+      ? `<a href="https://${SITE_URL}" target="_blank" rel="noopener noreferrer"><img src="https://${SITE_URL}/api/badge?theme=light" alt="Listed on Revolaunch" width="220" height="48" /></a>`
+      : `<a href="https://${SITE_URL}" target="_blank" rel="noopener noreferrer"><img src="https://${SITE_URL}/api/badge?theme=dark" alt="Listed on Revolaunch" width="220" height="48" /></a>`
+    navigator.clipboard.writeText(html)
+    setCopiedBadge(theme)
+    setTimeout(() => setCopiedBadge(null), 2000)
   }
 
   // Get slot info for display
@@ -694,7 +759,8 @@ function SubmitPageContent() {
                             )}
                           </div>
                           <p className="text-[10px] text-muted-foreground leading-relaxed">
-                            {selectedTier === 'free' && 'Your startup will join the standard queue. Earn a backlink by reaching the top 3 daily ranking.'}
+                            {selectedTier === 'free' && submissionSettings?.freeListingsEnabled && submissionSettings?.backlinkRequired && 'Free submission requires adding a Revolaunch badge to your website before launching.'}
+                            {selectedTier === 'free' && !(submissionSettings?.freeListingsEnabled && submissionSettings?.backlinkRequired) && 'Your startup will join the standard queue. Earn a backlink by reaching the top 3 daily ranking.'}
                             {selectedTier === 'premium' && 'Skip the queue, get a guaranteed dofollow backlink (DR 50), and receive a premium badge on your listing.'}
                             {selectedTier === 'premium-plus' && 'Get everything in Premium plus homepage spotlight, 14-day feed promotion, and a share on our X account.'}
                             {selectedTier === 'seo-growth' && 'Includes a dedicated SEO article that ranks for your product keywords, plus everything in Premium Plus.'}
@@ -727,7 +793,9 @@ function SubmitPageContent() {
                             <Rocket className="w-4 h-4 mr-1.5" />
                             {LAUNCH_TIERS[selectedTier].price > 0
                               ? `Pay $${LAUNCH_TIERS[selectedTier].price} & Launch`
-                              : 'Launch Now'
+                              : needsBadgeStep
+                                ? 'Next: Verify Badge'
+                                : 'Launch Now'
                             }
                           </>
                         )}
@@ -790,6 +858,186 @@ function SubmitPageContent() {
                 </div>
               </motion.div>
             )}
+            {/* Step 4: Badge Verification (free tier only) */}
+            {step === 4 && (
+              <motion.div
+                key="step4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="flex flex-col lg:flex-row gap-8"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <ShieldCheck className="w-6 h-6 text-orange-500" />
+                  </div>
+                  <h1 className="text-2xl font-bold text-foreground mb-1">
+                    Add our badge to your website
+                  </h1>
+                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                    To submit for free, please add the Revolaunch badge to your website. Copy the HTML snippet below, paste it on your site, then verify.
+                  </p>
+
+                  {/* Badge previews and snippets */}
+                  <div className="space-y-4 mb-6">
+                    <div className="p-4 rounded-xl border subtle-border bg-muted/30">
+                      <p className="text-xs font-medium text-foreground mb-3">Step 1: Copy the badge HTML</p>
+                      <div className="space-y-3">
+                        {/* Light badge */}
+                        <div>
+                          <p className="text-[10px] text-muted-foreground mb-1.5">Light theme</p>
+                          <div className="flex items-center gap-3">
+                            <div className="bg-white rounded-lg border border-border p-2">
+                              <img src="/api/badge?theme=light" alt="Light badge" width={220} height={48} />
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => copyBadgeHtml('light')}
+                              className="h-8 text-xs shrink-0"
+                            >
+                              {copiedBadge === 'light' ? (
+                                <><CheckCircle2 className="w-3 h-3 mr-1 text-green-500" /> Copied</>
+                              ) : (
+                                <><Copy className="w-3 h-3 mr-1" /> Copy HTML</>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        {/* Dark badge */}
+                        <div>
+                          <p className="text-[10px] text-muted-foreground mb-1.5">Dark theme</p>
+                          <div className="flex items-center gap-3">
+                            <div className="bg-[#1a1a1a] rounded-lg border border-border p-2">
+                              <img src="/api/badge?theme=dark" alt="Dark badge" width={220} height={48} />
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => copyBadgeHtml('dark')}
+                              className="h-8 text-xs shrink-0"
+                            >
+                              {copiedBadge === 'dark' ? (
+                                <><CheckCircle2 className="w-3 h-3 mr-1 text-green-500" /> Copied</>
+                              ) : (
+                                <><Copy className="w-3 h-3 mr-1" /> Copy HTML</>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Verification input */}
+                    <div className="p-4 rounded-xl border subtle-border bg-muted/30">
+                      <p className="text-xs font-medium text-foreground mb-3">Step 2: Verify your badge</p>
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="https://yourwebsite.com/page-with-badge"
+                            value={badgeUrl}
+                            onChange={e => { setBadgeUrl(e.target.value); setBadgeVerified(false) }}
+                            className="input-bg input-bg-focus text-foreground h-10 rounded-lg flex-1"
+                          />
+                          <Button
+                            onClick={handleVerifyBadge}
+                            disabled={verifyingBadge || !badgeUrl.trim()}
+                            className="bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg h-10 px-4 shrink-0"
+                          >
+                            {verifyingBadge ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              'Verify'
+                            )}
+                          </Button>
+                        </div>
+
+                        {/* Verification result */}
+                        {badgeVerified && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex items-start gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20"
+                          >
+                            <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                            <p className="text-xs text-green-600 dark:text-green-400">
+                              Badge verified! Your website contains a link to Revolaunch. You can now proceed with your free launch.
+                            </p>
+                          </motion.div>
+                        )}
+
+                        {!badgeVerified && badgeUrl && !verifyingBadge && (
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                            <AlertCircle className="w-4 h-4 text-orange-500 mt-0.5 shrink-0" />
+                            <p className="text-xs text-orange-600 dark:text-orange-400">
+                              Badge not found. Make sure you&apos;ve added the HTML snippet to the page and the page is publicly accessible. Some websites may take a few minutes to update.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between mt-6">
+                    <Button variant="ghost" onClick={() => setStep(3)} className="text-muted-foreground hover:text-foreground h-10">
+                      <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+                    </Button>
+                    <Button
+                      onClick={proceedWithLaunch}
+                      disabled={loading || !badgeVerified}
+                      className="bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg h-10 px-6"
+                    >
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Launching...
+                        </span>
+                      ) : (
+                        <>
+                          <Rocket className="w-4 h-4 mr-1.5" />
+                          Launch Now
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Sidebar */}
+                <div className="lg:w-[300px] shrink-0">
+                  <div className="lg:sticky lg:top-[72px] space-y-4">
+                    <div className="rounded-xl border border-orange-500/20 card-active-bg p-6 text-center">
+                      <h2 className="text-3xl font-bold gradient-text-blue mb-2">ALMOST THERE</h2>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Just add our badge and you&apos;re ready to launch!
+                      </p>
+                      <div className="rounded-lg bg-muted p-3">
+                        <p className="text-sm font-bold text-foreground">Free forever</p>
+                        <p className="text-[10px] text-muted-foreground">No credit card needed</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border subtle-border surface p-4">
+                      <p className="text-xs font-semibold text-foreground mb-3">Why a badge?</p>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <span className="text-base">🔗</span>
+                          <p className="text-[10px] text-muted-foreground">Helps us grow so we can send more traffic to your startup</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-base">📈</span>
+                          <p className="text-[10px] text-muted-foreground">Gives you a dofollow backlink from our directory</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-base">⭐</span>
+                          <p className="text-[10px] text-muted-foreground">Shows community trust and boosts your listing</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
           </AnimatePresence>
         </div>
       </main>

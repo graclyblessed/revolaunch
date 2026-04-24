@@ -25,8 +25,10 @@ model Startup {
   email       String?
   upvotes     Int       @default(0)
   featured    Boolean   @default(false)
-  launchTier  String    @default("free") // free, premium, premium-plus, seo-growth
-  launchDate  DateTime?
+  launchTier      String    @default("free") // free, premium, premium-plus, seo-growth
+  badgeVerified    Boolean   @default(false)
+  badgeVerifiedAt  DateTime?
+  launchDate       DateTime?
   status      String    @default("active") // active, acquired, paused
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

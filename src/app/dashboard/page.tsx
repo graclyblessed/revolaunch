@@ -8,7 +8,7 @@ import {
   Gift, Users, Calendar, Inbox, LayoutDashboard, ChevronRight, ExternalLink,
   Mail, Trash2, Pencil, Copy, Check, Search, Clock, MapPin, DollarSign,
   Trophy, MessageSquare, Share2, Linkedin, Twitter, Send, X, Eye, EyeOff,
-  Zap, Target, ChevronDown
+  Zap, Target, ChevronDown, Crown, Lock
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -19,6 +19,7 @@ import StartupLogo from '@/components/StartupLogo'
 import FollowButton from '@/components/FollowButton'
 import { useFollowing } from '@/hooks/use-following'
 import type { FollowingActivity } from '@/hooks/use-following'
+import { usePlan, PLANS } from '@/hooks/use-plan'
 import {
   ChartContainer,
   ChartTooltip,
@@ -85,6 +86,7 @@ const sidebarItems = [
   { name: 'My Affiliate', icon: Users },
   { name: 'Content Scheduler', icon: Calendar },
   { name: 'Earn $25', icon: Handshake },
+  { name: 'Upgrade to Pro', icon: Crown, href: '/pricing' },
 ]
 
 // ─── Animation variants ───
@@ -145,6 +147,9 @@ export default function DashboardPage() {
 
   // Follow hook
   const { isFollowing, toggleFollow, getFollowerCount, getFormattedFollowerCount, getActivityFeed, getFollowedStartups, followedIds } = useFollowing()
+
+  // Plan hook
+  const { isPro, getSchedulesRemaining, canScheduleMore, getPlanLabel, getDaysRemaining } = usePlan()
 
   // UI toggles
   const [expandedMsg, setExpandedMsg] = useState<string | null>(null)
@@ -1147,6 +1152,10 @@ export default function DashboardPage() {
     const weekDays = getWeekDays()
     const handleAddContent = () => {
       if (!contentForm.title || !contentForm.scheduledDate) { toast.error('Title and date are required'); return }
+      if (!canScheduleMore(contentItems.length)) {
+        toast.error('You have reached the free plan limit (10 scheduled posts). Upgrade to Pro for unlimited scheduling!')
+        return
+      }
       const newItem = { ...contentForm, id: `c-${Date.now()}`, createdAt: new Date().toISOString() }
       saveContent([...contentItems, newItem])
       setContentForm({ title: '', type: 'tweet', scheduledDate: '', status: 'draft' })
@@ -1156,17 +1165,47 @@ export default function DashboardPage() {
     const deleteContent = (id: string) => { saveContent(contentItems.filter(c => c.id !== id)); toast.success('Content deleted') }
     const typeIcon = (t: string) => t === 'tweet' ? '🐦' : t === 'linkedin' ? '💼' : t === 'blog' ? '📝' : '🚀'
     const statusColor = (s: string) => s === 'published' ? 'text-green-600 bg-green-500/10' : s === 'scheduled' ? 'text-blue-600 bg-blue-500/10' : 'text-muted-foreground bg-muted'
+    const remaining = getSchedulesRemaining(contentItems.length)
+    const isAtLimit = !canScheduleMore(contentItems.length)
     return (
       <motion.div {...fadeIn} className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-foreground mb-1">Content Scheduler</h1>
-            <p className="text-xs text-muted-foreground">{contentItems.length} items scheduled</p>
+            <p className="text-xs text-muted-foreground">
+              {contentItems.length} items scheduled
+              {!isPro && <span className="ml-1.5 text-orange-500">· {remaining === Infinity ? 'unlimited' : `${remaining} remaining`}</span>}
+            </p>
           </div>
-          <Button className="bg-orange-500 hover:bg-orange-600 text-white text-xs h-8 rounded-lg" onClick={() => setShowContentForm(!showContentForm)}>
-            <Plus className="w-3.5 h-3.5 mr-1.5" />Add Content
-          </Button>
+          {isAtLimit ? (
+            <Link href="/pricing">
+              <Button className="bg-orange-500 hover:bg-orange-600 text-white text-xs h-8 rounded-lg">
+                <Crown className="w-3.5 h-3.5 mr-1.5" />Upgrade to Pro
+              </Button>
+            </Link>
+          ) : (
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white text-xs h-8 rounded-lg" onClick={() => setShowContentForm(!showContentForm)}>
+              <Plus className="w-3.5 h-3.5 mr-1.5" />Add Content
+            </Button>
+          )}
         </div>
+
+        {!isPro && (
+          <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
+              <Lock className="w-4 h-4 text-orange-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground">Free Plan: {remaining} of {PLANS.free.schedulesLimit} posts remaining</p>
+              <p className="text-[10px] text-muted-foreground">Upgrade to Pro for unlimited scheduling on all platforms</p>
+            </div>
+            <Link href="/pricing">
+              <Button variant="outline" size="sm" className="text-[10px] h-7 rounded-lg border-orange-500/30 text-orange-500 hover:bg-orange-500/10">
+                <Crown className="w-3 h-3 mr-1" />Upgrade
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {showContentForm && (
           <motion.div {...scaleIn} className="rounded-xl border subtle-border surface p-4 space-y-3">
@@ -1391,6 +1430,26 @@ export default function DashboardPage() {
                 <nav className="space-y-0.5">
                   {sidebarItems.map((item) => {
                     const badge = getBadge(item.name)
+                    // 'Upgrade to Pro' is an external link
+                    if ('href' in item && item.href) {
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm transition-all ${
+                            isPro
+                              ? 'bg-orange-500/10 text-orange-500 font-medium'
+                              : 'bg-orange-500/5 text-orange-500 hover:bg-orange-500/10'
+                          }`}
+                        >
+                          <item.icon className="w-4 h-4" />
+                          <span className="flex-1 text-left">{isPro ? '✨ Pro Member' : item.name}</span>
+                          {!isPro && (
+                            <Crown className="w-3.5 h-3.5 text-orange-400" />
+                          )}
+                        </Link>
+                      )
+                    }
                     return (
                       <button
                         key={item.name}

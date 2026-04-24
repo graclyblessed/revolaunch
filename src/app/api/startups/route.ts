@@ -2,6 +2,17 @@ import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { fallbackStartups } from '@/lib/fallback-data'
 
+function getLogoFromWebsite(website: string, existingLogo: string | null): string | null {
+  if (existingLogo) return existingLogo
+  if (!website) return null
+  try {
+    const domain = new URL(website).hostname.replace(/^www\./, '')
+    return `https://logo.clearbit.com/${domain}`
+  } catch {
+    return null
+  }
+}
+
 async function tryDb<T>(fn: () => Promise<T>): Promise<T | null> {
   try {
     return await fn()
@@ -53,7 +64,10 @@ export async function GET(request: Request) {
       ])
 
       return {
-        startups,
+        startups: startups.map(s => ({
+          ...s,
+          logo: getLogoFromWebsite(s.website, s.logo),
+        })),
         total,
         page,
         limit,

@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
         name: s.name,
         slug: s.slug,
         tagline: s.tagline,
-        logo: s.logo,
+        logo: s.logo || (s.website ? `https://logo.clearbit.com/${new URL(s.website).hostname.replace(/^www\./, '')}` : null),
         website: s.website,
         category: s.category,
         stage: s.stage,

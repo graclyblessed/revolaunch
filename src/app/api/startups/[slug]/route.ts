@@ -2,6 +2,17 @@ import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { fallbackStartups, fallbackPerks } from '@/lib/fallback-data'
 
+function getLogoFromWebsite(website: string, existingLogo: string | null): string | null {
+  if (existingLogo) return existingLogo
+  if (!website) return null
+  try {
+    const domain = new URL(website).hostname.replace(/^www\./, '')
+    return `https://logo.clearbit.com/${domain}`
+  } catch {
+    return null
+  }
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ slug: string }> }
@@ -15,7 +26,14 @@ export async function GET(
       include: { _count: { select: { votes: true, perks: true } }, perks: true },
     }).catch(() => null)
 
-    if (dbStartup) return NextResponse.json({ startup: dbStartup })
+    if (dbStartup) {
+      return NextResponse.json({
+        startup: {
+          ...dbStartup,
+          logo: getLogoFromWebsite(dbStartup.website, dbStartup.logo),
+        }
+      })
+    }
 
     // Fallback: use static data
     const startup = fallbackStartups.find(s => s.slug === slug)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 interface StartupLogoProps {
   name: string
@@ -16,6 +16,9 @@ const sizeClasses = {
   md: 'w-11 h-11 text-sm',
   lg: 'w-12 h-12 text-lg',
 }
+
+// Minimum dimensions to consider an image "real" (not a 1px transparent dot)
+const MIN_VALID_SIZE = 8
 
 export function getDomain(website: string): string | null {
   if (!website) return null
@@ -54,34 +57,51 @@ export default function StartupLogo({ name, logo, website, logoColor, size = 'md
   const triedUrls = useRef<Set<string>>(new Set())
   const urlListRef = useRef<string[]>([])
   const [currentSrc, setCurrentSrc] = useState<string | null>(null)
-  const [imageLoaded, setImageLoaded] = useState(false)
+  const [showImage, setShowImage] = useState(false)
+
+  const tryNextUrl = useCallback(() => {
+    const nextUrl = urlListRef.current.find(u => !triedUrls.current.has(u))
+    if (nextUrl) {
+      triedUrls.current.add(nextUrl)
+      setCurrentSrc(nextUrl)
+      setShowImage(false)
+    } else {
+      setCurrentSrc(null)
+      setShowImage(false)
+    }
+  }, [])
 
   useEffect(() => {
     const urls = buildLogoUrls(logo, website)
     urlListRef.current = urls
     triedUrls.current.clear()
-    setImageLoaded(false)
+    setShowImage(false)
     if (urls.length > 0) {
-      setCurrentSrc(urls[0])
       triedUrls.current.add(urls[0])
+      setCurrentSrc(urls[0])
     } else {
       setCurrentSrc(null)
     }
   }, [logo, website])
 
   const handleImageError = () => {
-    setImageLoaded(false)
-    const nextUrl = urlListRef.current.find(u => !triedUrls.current.has(u))
-    if (nextUrl) {
-      triedUrls.current.add(nextUrl)
-      setCurrentSrc(nextUrl)
-    } else {
-      setCurrentSrc(null)
-    }
+    setShowImage(false)
+    tryNextUrl()
   }
 
-  const handleImageLoad = () => {
-    setImageLoaded(true)
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget
+    const w = img.naturalWidth
+    const h = img.naturalHeight
+
+    // Reject images that are too small (1px transparent favicons, empty SVGs, etc.)
+    if (w < MIN_VALID_SIZE || h < MIN_VALID_SIZE) {
+      setShowImage(false)
+      tryNextUrl()
+      return
+    }
+
+    setShowImage(true)
   }
 
   return (
@@ -90,7 +110,7 @@ export default function StartupLogo({ name, logo, website, logoColor, size = 'md
       style={{ backgroundColor: color + '22' }}
     >
       <span
-        className={`font-bold absolute transition-opacity duration-200 ${imageLoaded ? 'opacity-0' : 'opacity-100'}`}
+        className={`font-bold absolute transition-opacity duration-200 ${showImage ? 'opacity-0' : 'opacity-100'}`}
         style={{ color }}
       >
         {initial}
@@ -102,7 +122,7 @@ export default function StartupLogo({ name, logo, website, logoColor, size = 'md
           alt={`${name} logo`}
           width={32}
           height={32}
-          className={`w-full h-full object-contain p-1.5 relative z-10 transition-opacity duration-200 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className={`w-full h-full object-contain p-1.5 relative z-10 transition-opacity duration-200 ${showImage ? 'opacity-100' : 'opacity-0'}`}
           onError={handleImageError}
           onLoad={handleImageLoad}
           loading="lazy"

@@ -523,8 +523,14 @@ export default function Home() {
                   >
                     <div className="w-full h-full flex items-center justify-center p-3 hover:bg-muted/30 transition-colors">
                       {sponsor.logo ? (
-                        <img src={sponsor.logo} alt={sponsor.companyName} className="max-h-full max-w-full object-contain" />
-                      ) : (
+                        <img
+                          src={sponsor.logo}
+                          alt={sponsor.companyName}
+                          className="max-h-full max-w-full object-contain"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                        />
+                      ) : null}
+                      {!sponsor.logo && (
                         <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-orange-500 transition-colors truncate">
                           {sponsor.companyName}
                         </span>

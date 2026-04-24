@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyLemonSqueezySignature } from '@/lib/lemonsqueezy'
+import { db } from '@/lib/db'
 
-// POST /api/billing/webhook — handle LemonSqueezy webhooks
+// POST /api/billing/webhook — handle LemonSqueezy webhooks for per-launch payments
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text()
@@ -15,47 +16,52 @@ export async function POST(req: NextRequest) {
 
     const body = JSON.parse(rawBody)
     const eventName = body.meta?.event_name
-    const userId = body.meta?.custom_data?.userId
-    const sessionId = body.meta?.custom_data?.sessionId
+    const customData = body.meta?.custom_data || {}
+    const tier = customData.tier
+    const startupName = customData.startupName
+    const userId = customData.userId
 
-    console.log(`[Webhook] ${eventName} for user ${userId || sessionId}`)
+    console.log(`[Webhook] ${eventName} | Tier: ${tier || 'N/A'} | Startup: ${startupName || 'N/A'}`)
 
     switch (eventName) {
       case 'order_created': {
-        // One-time payment (lifetime plan)
         const order = body.data.attributes
         const variantId = order.first_order_item?.variant_id
-        console.log(`[Webhook] Order created: $${order.total} | Variant: ${variantId}`)
+        const total = order.total
+        const status = order.status
+        console.log(`[Webhook] Order created: $${total} | Status: ${status} | Variant: ${variantId}`)
 
-        // The client will verify plan status via /api/billing/verify
-        // Store order info for verification
+        // If order is paid, activate the launch tier on the startup
+        if (status === 'paid' && tier) {
+          try {
+            // Find the most recent pending startup by this founder
+            await db.startup.updateMany({
+              where: {
+                email: userId || undefined,
+                launchTier: tier,
+                status: 'active',
+              },
+              data: {
+                featured: tier === 'premium-plus' || tier === 'seo-growth',
+              },
+            })
+            console.log(`[Webhook] Activated ${tier} tier for ${startupName || userId}`)
+          } catch (dbErr) {
+            console.error('[Webhook] DB update failed:', dbErr)
+          }
+        }
         break
       }
 
-      case 'subscription_created':
-      case 'subscription_payment_success': {
-        // Recurring payment (monthly/annual)
-        const sub = body.data.attributes
-        const variantId = body.data.attributes.variant_id
-        console.log(`[Webhook] Subscription: ${sub.status} | Variant: ${variantId} | Ends: ${sub.ends_at || 'renewing'}`)
-        break
-      }
-
-      case 'subscription_updated': {
-        const sub = body.data.attributes
-        console.log(`[Webhook] Subscription updated: ${sub.status}`)
-        break
-      }
-
-      case 'subscription_cancelled':
-      case 'subscription_expired': {
-        const sub = body.data.attributes
-        console.log(`[Webhook] Subscription ${eventName}: ${sub.customer_id}`)
+      case 'order_refunded': {
+        const order = body.data.attributes
+        console.log(`[Webhook] Order refunded: ${order.first_order_item?.variant_id} | Tier: ${tier}`)
+        // Could downgrade startup tier here if needed
         break
       }
 
       default:
-        console.log(`[Webhook] Unhandled event: ${eventName}`)
+        console.log(`[Webhook] Event received: ${eventName}`)
     }
 
     return NextResponse.json({ received: true, event: eventName })

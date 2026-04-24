@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Rocket, User, Star, Trophy, ChevronRight, ChevronLeft, Loader2,
-  ExternalLink, Sparkles, Camera, X, Linkedin, Twitter, Globe, Zap, Check, Crown
+  ExternalLink, Sparkles, Camera, X, Linkedin, Twitter, Globe, Zap, Check, Crown, Lock, Clock
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,14 +16,34 @@ import {
 import { toast } from 'sonner'
 import Header from '@/components/Header'
 import { LAUNCH_TIERS, type LaunchTier } from '@/lib/launch-tiers'
+import { usePlan } from '@/hooks/use-plan'
+import Link from 'next/link'
 
 const categories = ['AI', 'SaaS', 'Finance', 'Developer Tools', 'Productivity', 'Marketing', 'Business', 'Healthcare', 'Education', 'Other']
 const stages = ['Pre-seed', 'Seed', 'Series A', 'Series B', 'Growth']
 
 export default function SubmitPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col bg-background">
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+        </div>
+      </div>
+    }>
+      <SubmitPageContent />
+    </Suspense>
+  )
+}
+
+function SubmitPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const preselectedTier = (searchParams.get('tier') as LaunchTier) || 'free'
+
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [checkingOut, setCheckingOut] = useState(false)
   const [profile, setProfile] = useState({
     firstName: '', lastName: '', role: '', twitter: '', linkedin: '', roleType: 'founder'
   })
@@ -31,7 +51,18 @@ export default function SubmitPage() {
     name: '', website: '', tagline: '', description: '', category: '', stage: 'Pre-seed',
     teamSize: '1-5', foundedYear: '', country: '', email: ''
   })
-  const [selectedTier, setSelectedTier] = useState<LaunchTier>('free')
+  const [selectedTier, setSelectedTier] = useState<LaunchTier>(preselectedTier)
+
+  // Plan hook for launch enforcement
+  const { canLaunch, getSlotsRemaining, recordLaunch, serverSlots, loaded: planLoaded } = usePlan()
+
+  // Read preselected tier from URL on mount
+  useEffect(() => {
+    const tier = searchParams.get('tier') as LaunchTier
+    if (tier && LAUNCH_TIERS[tier]) {
+      setSelectedTier(tier)
+    }
+  }, [searchParams])
 
   const totalSteps = 3
   const progress = (step / totalSteps) * 100
@@ -52,7 +83,62 @@ export default function SubmitPage() {
     setStep(3)
   }
 
+  const handleTierSelect = (tier: LaunchTier) => {
+    setSelectedTier(tier)
+  }
+
   const handleSubmit = async () => {
+    // Check slot availability before proceeding
+    const launchCheck = canLaunch(selectedTier)
+    if (!launchCheck.allowed) {
+      toast.error(launchCheck.reason || 'Launch slot not available')
+      return
+    }
+
+    const tierConfig = LAUNCH_TIERS[selectedTier]
+
+    // If paid tier, trigger checkout first
+    if (tierConfig.price > 0) {
+      setCheckingOut(true)
+      try {
+        const res = await fetch('/api/billing/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tier: selectedTier,
+            startupName: startup.name,
+            founderEmail: startup.email || profile.firstName,
+          }),
+        })
+        const data = await res.json()
+
+        if (data.checkoutUrl) {
+          // Redirect to LemonSqueezy checkout
+          window.location.href = data.checkoutUrl
+          return
+        }
+
+        // Demo mode — no checkout URL, proceed directly
+        if (data.demo || !data.checkoutUrl) {
+          setCheckingOut(false)
+          proceedWithLaunch()
+          return
+        }
+
+        toast.error('Failed to create checkout')
+        setCheckingOut(false)
+      } catch {
+        toast.error('Payment processing failed')
+        setCheckingOut(false)
+      }
+      return
+    }
+
+    // Free tier — proceed directly
+    proceedWithLaunch()
+  }
+
+  const proceedWithLaunch = async () => {
     setLoading(true)
     try {
       const res = await fetch('/api/startups', {
@@ -73,7 +159,11 @@ export default function SubmitPage() {
           tier: selectedTier,
         }),
       })
+
       if (res.ok) {
+        // Record the launch locally
+        recordLaunch(startup.name, selectedTier, LAUNCH_TIERS[selectedTier].price)
+
         router.push(`/launch-confirmation?name=${encodeURIComponent(startup.name)}&url=${encodeURIComponent(startup.website)}&founder=${encodeURIComponent(profile.firstName + ' ' + profile.lastName)}&email=${encodeURIComponent(startup.email || '')}&tier=${encodeURIComponent(selectedTier)}`)
       } else {
         toast.error('Failed to submit startup')
@@ -83,6 +173,14 @@ export default function SubmitPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Get slot info for display
+  const getSlotInfo = (tier: LaunchTier) => {
+    const remaining = getSlotsRemaining(tier)
+    const total = LAUNCH_TIERS[tier].slotsPerDay
+    const isSoldOut = remaining === 0
+    return { remaining, total, isSoldOut }
   }
 
   return (
@@ -99,7 +197,7 @@ export default function SubmitPage() {
             </div>
             <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-blue-500 rounded-full"
+                className="h-full bg-orange-500 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.4 }}
@@ -128,7 +226,7 @@ export default function SubmitPage() {
 
                   {/* Profile photo placeholder */}
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 border-2 border-border flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500/30 to-amber-500/30 border-2 border-border flex items-center justify-center">
                       <Camera className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <div>
@@ -210,8 +308,8 @@ export default function SubmitPage() {
                           onClick={() => setProfile({ ...profile, roleType: 'founder' })}
                           className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all border ${
                             profile.roleType === 'founder'
-                              ? 'bg-foreground text-background border-foreground'
-                              : 'bg-muted text-muted-foreground border-border hover:border-foreground/20'
+                              ? 'bg-orange-500 text-white border-orange-500'
+                              : 'bg-muted text-muted-foreground border-border hover:border-orange-500/20'
                           }`}
                         >
                           <Rocket className="w-4 h-4 inline mr-1.5" />
@@ -221,8 +319,8 @@ export default function SubmitPage() {
                           onClick={() => setProfile({ ...profile, roleType: 'investor' })}
                           className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all border ${
                             profile.roleType === 'investor'
-                              ? 'bg-foreground text-background border-foreground'
-                              : 'bg-muted text-muted-foreground border-border hover:border-foreground/20'
+                              ? 'bg-orange-500 text-white border-orange-500'
+                              : 'bg-muted text-muted-foreground border-border hover:border-orange-500/20'
                           }`}
                         >
                           <Trophy className="w-4 h-4 inline mr-1.5" />
@@ -233,7 +331,7 @@ export default function SubmitPage() {
                   </div>
 
                   <div className="flex justify-end mt-6">
-                    <Button onClick={handleProfileNext} className="bg-foreground text-background hover:bg-foreground/80 font-medium rounded-lg h-10 px-6">
+                    <Button onClick={handleProfileNext} className="bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg h-10 px-6">
                       Next <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
                   </div>
@@ -243,15 +341,15 @@ export default function SubmitPage() {
                 <div className="lg:w-[300px] shrink-0">
                   <div className="lg:sticky lg:top-[72px]">
                     <p className="text-xs text-muted-foreground mb-3">Preview</p>
-                    <div className="rounded-xl border-2 border-blue-500/30 surface p-5">
+                    <div className="rounded-xl border-2 border-orange-500/30 surface p-5">
                       <div className="flex items-center gap-2 mb-4">
-                        <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center">
                           <Rocket className="w-3.5 h-3.5 text-white" />
                         </div>
                         <span className="text-xs font-medium text-muted-foreground">revolaunch.net</span>
                       </div>
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-foreground font-bold text-lg">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500/30 to-amber-500/30 flex items-center justify-center text-foreground font-bold text-lg">
                           {profile.firstName ? profile.firstName[0].toUpperCase() : '?'}
                         </div>
                         <div>
@@ -328,7 +426,7 @@ export default function SubmitPage() {
                     <Button variant="ghost" onClick={() => setStep(1)} className="text-muted-foreground hover:text-foreground h-10">
                       <ChevronLeft className="w-4 h-4 mr-1" /> Previous
                     </Button>
-                    <Button onClick={() => setStep(3)} className="bg-foreground text-background hover:bg-foreground/80 font-medium rounded-lg h-10 px-6">
+                    <Button onClick={() => setStep(3)} className="bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg h-10 px-6">
                       Next <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
                   </div>
@@ -367,7 +465,7 @@ export default function SubmitPage() {
               </motion.div>
             )}
 
-            {/* Step 3: Launch */}
+            {/* Step 3: Launch with Tier Selection */}
             {step === 3 && (
               <motion.div
                 key="step3"
@@ -381,7 +479,7 @@ export default function SubmitPage() {
                     Ready to launch?
                   </h1>
                   <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                    Launch your startup and compete on our weekly leaderboard. Earn stars, get reviews, and get discovered by thousands.
+                    Choose your launch plan and submit. All launches go live at <span className="text-orange-500 font-medium">8:00 AM UTC</span>.
                   </p>
 
                   <div className="space-y-4">
@@ -504,24 +602,37 @@ export default function SubmitPage() {
                       />
                     </div>
 
+                    {/* ─── Tier Selection with Slot Enforcement ─── */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-foreground mb-2 block">
-                        Choose Your Launch Plan
-                        <Link href="/pricing" className="ml-2 text-orange-500 hover:text-orange-400 text-[10px]">View all plans</Link>
-                      </label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium text-foreground">
+                          Choose Your Launch Plan
+                        </label>
+                        <Link href="/pricing" className="text-orange-500 hover:text-orange-400 text-[10px] font-medium">
+                          View full comparison
+                        </Link>
+                      </div>
+
                       <div className="grid grid-cols-2 gap-2">
                         {(['free', 'premium', 'premium-plus', 'seo-growth'] as LaunchTier[]).map(key => {
                           const tier = LAUNCH_TIERS[key]
                           const isSelected = selectedTier === key
+                          const slotInfo = getSlotInfo(key)
+                          const isSoldOut = slotInfo.isSoldOut
+                          const isLocked = isSoldOut && key !== 'free'
+
                           return (
                             <button
                               key={key}
                               type="button"
-                              onClick={() => setSelectedTier(key)}
+                              onClick={() => !isLocked && handleTierSelect(key)}
+                              disabled={isLocked}
                               className={`relative rounded-xl border-2 p-3 text-left transition-all ${
-                                isSelected
-                                  ? `${tier.borderColor} bg-muted/30`
-                                  : 'border-border hover:border-muted-foreground/30'
+                                isLocked
+                                  ? 'border-border bg-muted/30 opacity-50 cursor-not-allowed'
+                                  : isSelected
+                                    ? `${tier.borderColor} bg-muted/30`
+                                    : 'border-border hover:border-muted-foreground/30 cursor-pointer'
                               }`}
                             >
                               {isSelected && (
@@ -529,15 +640,67 @@ export default function SubmitPage() {
                                   <Check className="w-3 h-3 text-white" />
                                 </div>
                               )}
+                              {isLocked && (
+                                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-muted flex items-center justify-center">
+                                  <Lock className="w-3 h-3 text-muted-foreground" />
+                                </div>
+                              )}
                               <div className="text-lg mb-1">{tier.icon}</div>
                               <p className="text-xs font-semibold text-foreground">{tier.name}</p>
-                              <p className="text-[10px] text-muted-foreground mt-0.5">
-                                {tier.price === 0 ? 'Free' : `$${tier.price}/launch`}
-                              </p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="text-[10px] text-muted-foreground">
+                                  {tier.price === 0 ? 'Free' : `$${tier.price}/launch`}
+                                </span>
+                              </div>
+                              {/* Slot indicator */}
+                              <div className={`flex items-center gap-1 mt-1.5 text-[9px] ${
+                                slotInfo.remaining <= 2 && slotInfo.remaining > 0
+                                  ? 'text-amber-500'
+                                  : slotInfo.remaining === 0
+                                    ? 'text-red-500'
+                                    : 'text-muted-foreground'
+                              }`}>
+                                <Clock className="w-2.5 h-2.5" />
+                                <span>
+                                  {slotInfo.remaining === 0
+                                    ? 'Sold out today'
+                                    : `${slotInfo.remaining}/${slotInfo.total} slots left`
+                                  }
+                                </span>
+                              </div>
                             </button>
                           )
                         })}
                       </div>
+
+                      {/* Selected tier summary */}
+                      {selectedTier && (
+                        <motion.div
+                          key={selectedTier}
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="rounded-lg border subtle-border bg-muted/30 p-3 mt-2"
+                        >
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span>{LAUNCH_TIERS[selectedTier].icon}</span>
+                            <span className="text-xs font-semibold text-foreground">
+                              {LAUNCH_TIERS[selectedTier].name}
+                            </span>
+                            {LAUNCH_TIERS[selectedTier].price > 0 && (
+                              <Badge variant="secondary" className="text-[9px] bg-orange-500/10 text-orange-500 border-orange-500/20 ml-auto">
+                                ${LAUNCH_TIERS[selectedTier].price} one-time
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground leading-relaxed">
+                            {selectedTier === 'free' && 'Your startup will join the standard queue. Earn a backlink by reaching the top 3 daily ranking.'}
+                            {selectedTier === 'premium' && 'Skip the queue, get a guaranteed dofollow backlink (DR 50), and receive a premium badge on your listing.'}
+                            {selectedTier === 'premium-plus' && 'Get everything in Premium plus homepage spotlight, 14-day feed promotion, and a share on our X account.'}
+                            {selectedTier === 'seo-growth' && 'Includes a dedicated SEO article that ranks for your product keywords, plus everything in Premium Plus.'}
+                          </p>
+                        </motion.div>
+                      )}
                     </div>
                   </div>
 
@@ -551,15 +714,21 @@ export default function SubmitPage() {
                       </Button>
                       <Button
                         onClick={handleSubmit}
-                        disabled={loading}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg h-10 px-6"
+                        disabled={loading || checkingOut}
+                        className="bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg h-10 px-6"
                       >
-                        {loading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                        {loading || checkingOut ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            {checkingOut ? 'Processing payment...' : 'Launching...'}
+                          </span>
                         ) : (
                           <>
                             <Rocket className="w-4 h-4 mr-1.5" />
-                            Launch Now
+                            {LAUNCH_TIERS[selectedTier].price > 0
+                              ? `Pay $${LAUNCH_TIERS[selectedTier].price} & Launch`
+                              : 'Launch Now'
+                            }
                           </>
                         )}
                       </Button>
@@ -569,8 +738,8 @@ export default function SubmitPage() {
 
                 {/* Launch Now CTA */}
                 <div className="lg:w-[300px] shrink-0">
-                  <div className="lg:sticky lg:top-[72px]">
-                    <div className="rounded-xl border border-blue-500/20 card-active-bg p-6 text-center">
+                  <div className="lg:sticky lg:top-[72px] space-y-4">
+                    <div className="rounded-xl border border-orange-500/20 card-active-bg p-6 text-center">
                       <h2 className="text-3xl font-bold gradient-text-blue mb-2">LAUNCH NOW</h2>
                       <p className="text-xs text-muted-foreground mb-4">
                         Join 36 startups already competing for the top spot this week.
@@ -584,6 +753,37 @@ export default function SubmitPage() {
                           <p className="text-lg font-bold text-foreground">200+</p>
                           <p className="text-[10px] text-muted-foreground">Investors Active</p>
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Daily slot overview */}
+                    <div className="rounded-xl border subtle-border surface p-4">
+                      <p className="text-xs font-semibold text-foreground mb-3">Today&apos;s Availability</p>
+                      <div className="space-y-2">
+                        {(['free', 'premium', 'premium-plus', 'seo-growth'] as LaunchTier[]).map(tier => {
+                          const info = getSlotInfo(tier)
+                          const pct = (info.remaining / info.total) * 100
+                          return (
+                            <div key={tier} className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-muted-foreground">{LAUNCH_TIERS[tier].icon} {LAUNCH_TIERS[tier].name.replace(' Launch', '').replace(' Package', '')}</span>
+                                <span className={`text-[10px] font-medium ${
+                                  info.remaining === 0 ? 'text-red-500' : info.remaining <= 2 ? 'text-amber-500' : 'text-muted-foreground'
+                                }`}>
+                                  {info.remaining}/{info.total}
+                                </span>
+                              </div>
+                              <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all ${
+                                    info.remaining === 0 ? 'bg-red-500' : info.remaining <= 2 ? 'bg-amber-500' : 'bg-green-500'
+                                  }`}
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
                   </div>

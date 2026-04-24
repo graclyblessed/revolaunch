@@ -100,11 +100,14 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, tagline, description, website, category, stage, teamSize, foundedYear, country, email, twitter } = body
+    const { name, tagline, description, website, category, stage, teamSize, foundedYear, country, email, twitter, tier } = body
 
     if (!name || !tagline || !website || !category) {
       return NextResponse.json({ error: 'Name, tagline, website, and category are required' }, { status: 400 })
     }
+
+    const validTiers = ['free', 'premium', 'premium-plus', 'seo-growth']
+    const launchTier = validTiers.includes(tier) ? tier : 'free'
 
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now().toString(36)
 
@@ -119,6 +122,9 @@ export async function POST(request: Request) {
         country: country || null,
         email: email || null,
         twitter: twitter || null,
+        launchTier,
+        launchDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Next day at 8:00 AM UTC
+        featured: launchTier === 'premium-plus' || launchTier === 'seo-growth',
       },
     })
 

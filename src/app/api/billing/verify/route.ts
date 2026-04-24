@@ -1,46 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSubscription, getOrder, isLemonSqueezyConfigured } from '@/lib/lemonsqueezy-client'
+import { getOrder, isLemonSqueezyConfigured } from '@/lib/lemonsqueezy-client'
 
-// GET /api/billing/verify — verify subscription status
+// GET /api/billing/verify — verify a one-time launch payment
+// Query: order_id, tier
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const orderId = searchParams.get('order_id')
-    const subscriptionId = searchParams.get('subscription_id')
+    const tier = searchParams.get('tier')
 
     if (!isLemonSqueezyConfigured) {
-      return NextResponse.json({ active: false, plan: 'free' }, { status: 200 })
+      // Demo mode — always active
+      return NextResponse.json({
+        active: true,
+        plan: tier || 'free',
+        cycle: 'one-time',
+        demo: true,
+      })
     }
 
-    let active = false
-    let plan = 'free'
-    let cycle: string | null = null
-
-    if (subscriptionId) {
-      const { data, error } = await getSubscription(subscriptionId)
-      if (!error && data) {
-        const attrs = data.attributes
-        active = attrs.status === 'active' || attrs.status === 'on_trial'
-        if (active) {
-          plan = 'pro'
-          cycle = 'recurring'
-        }
-      }
-    } else if (orderId) {
-      const { data, error } = await getOrder(orderId)
-      if (!error && data) {
-        const attrs = data.attributes
-        active = attrs.status === 'paid'
-        if (active) {
-          plan = 'pro'
-          cycle = 'lifetime'
-        }
-      }
+    if (!orderId) {
+      return NextResponse.json({ active: false, plan: 'free', cycle: null })
     }
 
-    return NextResponse.json({ active, plan, cycle })
+    const { data, error } = await getOrder(orderId)
+    if (!error && data) {
+      const attrs = data.attributes
+      const isPaid = attrs.status === 'paid'
+      return NextResponse.json({
+        active: isPaid,
+        plan: isPaid ? (tier || 'premium') : 'free',
+        cycle: isPaid ? 'one-time' : null,
+        amount: attrs.total,
+        currency: attrs.currency_code || 'usd',
+      })
+    }
+
+    return NextResponse.json({ active: false, plan: 'free', cycle: null })
   } catch (err) {
     console.error('Verify error:', err)
-    return NextResponse.json({ active: false, plan: 'free' }, { status: 200 })
+    return NextResponse.json({ active: false, plan: 'free', cycle: null })
   }
 }

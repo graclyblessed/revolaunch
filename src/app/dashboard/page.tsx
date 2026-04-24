@@ -19,7 +19,7 @@ import StartupLogo from '@/components/StartupLogo'
 import FollowButton from '@/components/FollowButton'
 import { useFollowing } from '@/hooks/use-following'
 import type { FollowingActivity } from '@/hooks/use-following'
-import { usePlan, PLANS } from '@/hooks/use-plan'
+import { usePlan } from '@/hooks/use-plan'
 import {
   ChartContainer,
   ChartTooltip,
@@ -86,7 +86,7 @@ const sidebarItems = [
   { name: 'My Affiliate', icon: Users },
   { name: 'Content Scheduler', icon: Calendar },
   { name: 'Earn $25', icon: Handshake },
-  { name: 'Upgrade to Pro', icon: Crown, href: '/pricing' },
+  { name: 'Launch Plans', icon: Crown, href: '/pricing' },
 ]
 
 // ─── Animation variants ───
@@ -149,7 +149,7 @@ export default function DashboardPage() {
   const { isFollowing, toggleFollow, getFollowerCount, getFormattedFollowerCount, getActivityFeed, getFollowedStartups, followedIds } = useFollowing()
 
   // Plan hook
-  const { isPro, getSchedulesRemaining, canScheduleMore, getPlanLabel, getDaysRemaining } = usePlan()
+  const { getSchedulesRemaining, canScheduleMore, getPlanLabel, activeTier, totalLaunches, totalSpent, getSlotsRemaining } = usePlan()
 
   // UI toggles
   const [expandedMsg, setExpandedMsg] = useState<string | null>(null)
@@ -1153,7 +1153,7 @@ export default function DashboardPage() {
     const handleAddContent = () => {
       if (!contentForm.title || !contentForm.scheduledDate) { toast.error('Title and date are required'); return }
       if (!canScheduleMore(contentItems.length)) {
-        toast.error('You have reached the free plan limit (10 scheduled posts). Upgrade to Pro for unlimited scheduling!')
+        toast.error('You have reached the free plan limit (10 scheduled posts). Launch with a paid plan for unlimited scheduling!')
         return
       }
       const newItem = { ...contentForm, id: `c-${Date.now()}`, createdAt: new Date().toISOString() }
@@ -1174,13 +1174,13 @@ export default function DashboardPage() {
             <h1 className="text-xl font-bold text-foreground mb-1">Content Scheduler</h1>
             <p className="text-xs text-muted-foreground">
               {contentItems.length} items scheduled
-              {!isPro && <span className="ml-1.5 text-orange-500">· {remaining === Infinity ? 'unlimited' : `${remaining} remaining`}</span>}
+              {activeTier !== 'free' && <span className="ml-1.5 text-orange-500">· {remaining === Infinity ? 'unlimited' : `${remaining} remaining`}</span>}
             </p>
           </div>
           {isAtLimit ? (
             <Link href="/pricing">
               <Button className="bg-orange-500 hover:bg-orange-600 text-white text-xs h-8 rounded-lg">
-                <Crown className="w-3.5 h-3.5 mr-1.5" />Upgrade to Pro
+                <Crown className="w-3.5 h-3.5 mr-1.5" />Upgrade Plan
               </Button>
             </Link>
           ) : (
@@ -1190,18 +1190,18 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {!isPro && (
+        {activeTier === 'free' && (
           <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
               <Lock className="w-4 h-4 text-orange-500" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-foreground">Free Plan: {remaining} of {PLANS.free.schedulesLimit} posts remaining</p>
-              <p className="text-[10px] text-muted-foreground">Upgrade to Pro for unlimited scheduling on all platforms</p>
+              <p className="text-xs font-medium text-foreground">Free Plan: {remaining} of 10 posts remaining</p>
+              <p className="text-[10px] text-muted-foreground">Launch with a paid plan for unlimited scheduling on all platforms</p>
             </div>
             <Link href="/pricing">
               <Button variant="outline" size="sm" className="text-[10px] h-7 rounded-lg border-orange-500/30 text-orange-500 hover:bg-orange-500/10">
-                <Crown className="w-3 h-3 mr-1" />Upgrade
+                <Crown className="w-3 h-3 mr-1" />View Plans
               </Button>
             </Link>
           </div>
@@ -1430,22 +1430,24 @@ export default function DashboardPage() {
                 <nav className="space-y-0.5">
                   {sidebarItems.map((item) => {
                     const badge = getBadge(item.name)
-                    // 'Upgrade to Pro' is an external link
+                    // 'Launch Plans' is an external link
                     if ('href' in item && item.href) {
                       return (
                         <Link
                           key={item.name}
                           href={item.href}
                           className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm transition-all ${
-                            isPro
+                            totalLaunches > 0
                               ? 'bg-orange-500/10 text-orange-500 font-medium'
                               : 'bg-orange-500/5 text-orange-500 hover:bg-orange-500/10'
                           }`}
                         >
                           <item.icon className="w-4 h-4" />
-                          <span className="flex-1 text-left">{isPro ? '✨ Pro Member' : item.name}</span>
-                          {!isPro && (
-                            <Crown className="w-3.5 h-3.5 text-orange-400" />
+                          <span className="flex-1 text-left">{totalLaunches > 0 ? 'Launch Plans' : item.name}</span>
+                          {totalLaunches > 0 && (
+                            <Badge variant="secondary" className="text-[9px] bg-orange-500/20 text-orange-500 h-5 px-1.5">
+                              {totalLaunches} launch{totalLaunches !== 1 ? 'es' : ''}
+                            </Badge>
                           )}
                         </Link>
                       )

@@ -4,13 +4,7 @@ import { fallbackStartups } from '@/lib/fallback-data'
 
 function getLogoFromWebsite(website: string, existingLogo: string | null): string | null {
   if (existingLogo) return existingLogo
-  if (!website) return null
-  try {
-    const domain = new URL(website).hostname.replace(/^www\./, '')
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
-  } catch {
-    return null
-  }
+  return null
 }
 
 async function tryDb<T>(fn: () => Promise<T>): Promise<T | null> {

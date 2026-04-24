@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Building2, ThumbsUp, Users, Megaphone, Star, Clock,
-  TrendingUp, ArrowUpRight, ArrowDownRight
+  TrendingUp, ArrowUpRight, ArrowDownRight, Database, Loader2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -57,6 +57,8 @@ const tierColors: Record<string, string> = {
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [seeding, setSeeding] = useState(false)
+  const [seedResult, setSeedResult] = useState<string | null>(null)
 
   useEffect(() => {
     fetchStats()
@@ -73,6 +75,30 @@ export default function AdminDashboardPage() {
       console.error('Failed to fetch stats:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleReseed = async () => {
+    if (!confirm('This will DELETE all fake/user-submitted startups and re-seed 36 real Product Hunt companies. Are you sure?')) return
+    setSeeding(true)
+    setSeedResult(null)
+    try {
+      const res = await fetch('/api/admin/seed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: 'clean-and-reseed' }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setSeedResult(data.message || 'Database cleaned and reseeded!')
+        fetchStats()
+      } else {
+        setSeedResult(data.error || 'Failed to reseed database')
+      }
+    } catch (err) {
+      setSeedResult('Error: ' + (err as Error).message)
+    } finally {
+      setSeeding(false)
     }
   }
 
@@ -101,14 +127,30 @@ export default function AdminDashboardPage() {
             Welcome back! Here is an overview of your platform.
           </p>
         </div>
-        <button
-          onClick={fetchStats}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-        >
-          <TrendingUp className="w-3 h-3" />
-          Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleReseed}
+            disabled={seeding}
+            className="text-xs bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 border border-orange-500/20 rounded-lg px-3 py-1.5 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+          >
+            {seeding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Database className="w-3 h-3" />}
+            {seeding ? 'Reseeding...' : 'Clean & Reseed DB'}
+          </button>
+          <button
+            onClick={fetchStats}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+          >
+            <TrendingUp className="w-3 h-3" />
+            Refresh
+          </button>
+        </div>
       </div>
+
+      {seedResult && (
+        <div className="rounded-lg border border-green-500/30 bg-green-500/5 px-4 py-3">
+          <p className="text-sm text-green-600 dark:text-green-400">{seedResult}</p>
+        </div>
+      )}
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

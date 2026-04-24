@@ -2,9 +2,10 @@ import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { fallbackStartups, fallbackPerks } from '@/lib/fallback-data'
 
-function getLogoFromWebsite(website: string, existingLogo: string | null): string | null {
-  if (existingLogo) return existingLogo
-  return null
+function cleanLogo(logo: string | null): string | null {
+  if (!logo) return null
+  if (logo.includes('google.com/s2/favicons')) return null
+  return logo
 }
 
 export async function GET(
@@ -24,7 +25,7 @@ export async function GET(
       return NextResponse.json({
         startup: {
           ...dbStartup,
-          logo: getLogoFromWebsite(dbStartup.website, dbStartup.logo),
+          logo: cleanLogo(dbStartup.logo),
         }
       })
     }

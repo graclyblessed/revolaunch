@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
         name: s.name,
         slug: s.slug,
         tagline: s.tagline,
-        logo: s.logo || null,
+        logo: (s.logo && !s.logo.includes('google.com/s2/favicons')) ? s.logo : null,
         website: s.website,
         category: s.category,
         stage: s.stage,

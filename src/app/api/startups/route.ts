@@ -2,9 +2,11 @@ import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { fallbackStartups } from '@/lib/fallback-data'
 
-function getLogoFromWebsite(website: string, existingLogo: string | null): string | null {
-  if (existingLogo) return existingLogo
-  return null
+function cleanLogo(logo: string | null): string | null {
+  if (!logo) return null
+  // Strip previously-stored Google Favicon URLs so the client can use its proper fallback chain
+  if (logo.includes('google.com/s2/favicons')) return null
+  return logo
 }
 
 async function tryDb<T>(fn: () => Promise<T>): Promise<T | null> {
@@ -60,7 +62,7 @@ export async function GET(request: Request) {
       return {
         startups: startups.map(s => ({
           ...s,
-          logo: getLogoFromWebsite(s.website, s.logo),
+          logo: cleanLogo(s.logo),
         })),
         total,
         page,

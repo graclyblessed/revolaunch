@@ -22,6 +22,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li><Link href="/submit" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Submit Startup</Link></li>
               <li><Link href="/pricing" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Pricing</Link></li>
+              <li><Link href="/dashboard" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link></li>
             </ul>
           </div>
 
@@ -40,8 +41,9 @@ export default function Footer() {
           <div>
             <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">Company</p>
             <ul className="space-y-2">
-              <li><Link href="/sponsor" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Sponsor</Link></li>
               <li><Link href="/about" className="text-xs text-muted-foreground hover:text-foreground transition-colors">About</Link></li>
+              <li><Link href="/sponsor" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Sponsor</Link></li>
+              <li><Link href="/pricing" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Pricing</Link></li>
             </ul>
           </div>
         </div>
@@ -60,6 +62,7 @@ export default function Footer() {
             <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
             <Link href="/sponsor" className="hover:text-foreground transition-colors">Sponsor</Link>
             <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
+            <Link href="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link>
           </div>
         </div>
       </div>

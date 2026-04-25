@@ -143,27 +143,8 @@ export default function Header() {
                   ))}
                 </div>
               </div>
-              <div className="px-3 py-2">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Grow</p>
-                <div className="space-y-0.5">
-                  {growItems.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <item.icon className="w-4 h-4" />
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
               <Link href="/pricing" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
                 Pricing
-              </Link>
-              <Link href="/sponsor" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
-                Sponsor
               </Link>
               <Link href="/insight" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
                 Insight

@@ -17,7 +17,7 @@ const sidebarItems = [
   { name: 'Startups', icon: Building2, href: '/admin/startups' },
   { name: 'Sponsors', icon: Megaphone, href: '/admin/sponsors' },
   { name: 'Subscribers', icon: Users, href: '/admin/subscribers' },
-  { name: 'Analytics', icon: BarChart3, href: '/insight' },
+  { name: 'Analytics', icon: BarChart3, href: '/insight', external: true },
   { name: 'Settings', icon: Settings, href: '/admin/settings' },
 ]
 
@@ -95,7 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
         {sidebarItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
-          const isExternal = item.href.startsWith('http')
+          const isExternal = item.href.startsWith('http') || (item as any).external
 
           const linkContent = (
             <div className={cn(

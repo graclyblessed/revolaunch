@@ -41,8 +41,11 @@ export default function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">
-            <Link href="/#startups" className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted">
+            <Link href="/startups" className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted">
               Startups
+            </Link>
+            <Link href="/categories" className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted">
+              Categories
             </Link>
 
             {/* Community Dropdown */}
@@ -124,8 +127,11 @@ export default function Header() {
               exit={{ opacity: 0, height: 0 }}
               className="md:hidden pb-4 border-t subtle-border pt-3 space-y-1"
             >
-              <Link href="/#startups" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/startups" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
                 Startups
+              </Link>
+              <Link href="/categories" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
+                Categories
               </Link>
               <div className="px-3 py-2">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Community</p>

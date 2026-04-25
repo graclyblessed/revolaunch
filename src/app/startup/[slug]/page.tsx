@@ -22,6 +22,9 @@ import {
   Tag,
   ArrowUpRight,
   Flame,
+  Share2,
+  Link2,
+  Check,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -298,6 +301,8 @@ export default function StartupProfilePage() {
   const [isVoted, setIsVoted] = useState(false)
   const [upvotes, setUpvotes] = useState(0)
   const [voting, setVoting] = useState(false)
+  const [relatedStartups, setRelatedStartups] = useState<StartupData[]>([])
+  const [copied, setCopied] = useState(false)
 
   /* ---- Fetch startup data ---- */
   useEffect(() => {
@@ -366,6 +371,46 @@ export default function StartupProfilePage() {
       setVoting(false)
     }
   }, [slug, voting])
+
+  /* ---- Fetch related startups ---- */
+  useEffect(() => {
+    if (!startup) return
+    async function fetchRelated() {
+      try {
+        const res = await fetch(`/api/startups?category=${encodeURIComponent(startup.category)}&limit=4&sort=popular`)
+        if (res.ok) {
+          const data = await res.json()
+          if (Array.isArray(data.startups)) {
+            setRelatedStartups(data.startups.filter((s: StartupData) => s.slug !== startup.slug).slice(0, 3))
+          }
+        }
+      } catch { /* silent */ }
+    }
+    fetchRelated()
+  }, [startup])
+
+  /* ---- Share handlers ---- */
+  const pageUrl = typeof window !== 'undefined' ? window.location.href : ''
+  const shareText = `Check out ${startup.name} on Revolaunch — ${startup.tagline}`
+
+  const handleShareTwitter = () => {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(pageUrl)}`, '_blank')
+  }
+
+  const handleShareLinkedIn = () => {
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`, '_blank')
+  }
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(pageUrl)
+      setCopied(true)
+      toast.success('Link copied!')
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('Failed to copy')
+    }
+  }
 
   /* ---- Render states ---- */
   if (loading) return <LoadingSkeleton />
@@ -642,6 +687,90 @@ export default function StartupProfilePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {startup.perks.map((perk) => (
                 <PerkCard key={perk.id} perk={perk} />
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        {/* ================================================================
+            SHARE
+            ================================================================ */}
+        <motion.section variants={fadeIn} transition={{ duration: 0.4 }} className="pb-8">
+          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Share2 className="w-4 h-4 text-orange-500" />
+            Share
+          </h3>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleShareTwitter}
+              variant="outline"
+              className="rounded-xl h-10 px-4 text-sm text-muted-foreground hover:text-foreground gap-2"
+            >
+              <Twitter className="w-4 h-4" />
+              <span className="hidden sm:inline">Share on X</span>
+            </Button>
+            <Button
+              onClick={handleShareLinkedIn}
+              variant="outline"
+              className="rounded-xl h-10 px-4 text-sm text-muted-foreground hover:text-foreground gap-2"
+            >
+              <Linkedin className="w-4 h-4" />
+              <span className="hidden sm:inline">Share on LinkedIn</span>
+            </Button>
+            <Button
+              onClick={handleCopyLink}
+              variant="outline"
+              className={cn(
+                'rounded-xl h-10 px-4 text-sm gap-2 transition-all duration-200',
+                copied
+                  ? 'text-green-500 border-green-500/30 bg-green-500/10'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
+              {copied ? 'Copied' : 'Copy link'}
+            </Button>
+          </div>
+        </motion.section>
+
+        {/* ================================================================
+            RELATED STARTUPS
+            ================================================================ */}
+        {relatedStartups.length > 0 && (
+          <motion.section variants={fadeIn} transition={{ duration: 0.4 }} className="pb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Flame className="w-4 h-4 text-orange-500" />
+              <h3 className="text-sm font-semibold text-foreground">
+                Related in {startup.category}
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {relatedStartups.map((related) => (
+                <Link
+                  key={related.id}
+                  href={`/startup/${related.slug}`}
+                  className="group rounded-xl border border-border hover:border-orange-500/30 bg-muted/20 hover:bg-muted/40 p-4 transition-all duration-200"
+                >
+                  <div className="flex items-start gap-3">
+                    <StartupLogo
+                      name={related.name}
+                      logo={related.logo}
+                      website={related.website}
+                      logoColor={related.logoColor}
+                      size="sm"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-sm text-foreground truncate group-hover:text-orange-500 transition-colors">
+                        {related.name}
+                      </h4>
+                      <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{related.tagline}</p>
+                      <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                        <Star className="w-3 h-3 text-amber-500" />
+                        <span className="tabular-nums font-medium">{related.upvotes}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
               ))}
             </div>
           </motion.section>

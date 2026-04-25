@@ -3,12 +3,21 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSession, signOut } from 'next-auth/react'
 import {
   Rocket, ChevronDown, TrendingUp, BarChart3,
   Handshake, Flame,
-  LogIn, Menu, X
+  LogIn, LogOut, LayoutDashboard, Menu, X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import ThemeToggle from './ThemeToggle'
 
 const communityItems = [
@@ -20,6 +29,20 @@ const communityItems = [
 export default function Header() {
   const [communityOpen, setCommunityOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { data: session, status } = useSession()
+
+  const user = session?.user
+
+  // Get initials from name or email
+  const getInitials = () => {
+    if (user?.name) {
+      return user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase()
+    }
+    return '?'
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b subtle-border header-bg">
@@ -101,12 +124,55 @@ export default function Header() {
                 Launch
               </Button>
             </Link>
-            <Link href="/dashboard" className="hidden sm:block">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground h-8 text-sm rounded-lg px-3">
-                <LogIn className="w-3.5 h-3.5 mr-1.5" />
-                Login
-              </Button>
-            </Link>
+
+            {/* User menu or Sign In button */}
+            {user ? (
+              <div className="hidden sm:block">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 h-8 pl-1 pr-2 rounded-lg hover:bg-muted transition-colors cursor-pointer">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={user.image || ''} alt={user.name || ''} />
+                        <AvatarFallback className="text-[10px] bg-orange-500/10 text-orange-500">{getInitials()}</AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm text-foreground font-medium max-w-[100px] truncate">
+                        {user.name || user.email?.split('@')[0]}
+                      </span>
+                      <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <div className="px-2 py-1.5">
+                      <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard" className="flex items-center gap-2 cursor-pointer">
+                        <LayoutDashboard className="w-4 h-4" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => signOut({ callbackUrl: '/' })}
+                      className="text-red-500 focus:text-red-500 cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : (
+              <Link href="/login" className="hidden sm:block">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground h-8 text-sm rounded-lg px-3">
+                  <LogIn className="w-3.5 h-3.5 mr-1.5" />
+                  Sign In
+                </Button>
+              </Link>
+            )}
+
             <Button
               variant="ghost"
               size="icon"
@@ -160,16 +226,34 @@ export default function Header() {
                 Insight
               </Link>
               <div className="flex gap-2 pt-2 px-3">
-                <Link href="/submit" className="flex-1">
+                <Link href="/submit" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
                   <Button size="sm" className="w-full bg-orange-500 hover:bg-orange-600 text-white h-9 text-sm font-medium rounded-lg">
                     Launch
                   </Button>
                 </Link>
-                <Link href="/dashboard" className="flex-1">
-                  <Button variant="outline" size="sm" className="w-full text-muted-foreground hover:text-foreground h-9 text-sm rounded-lg">
-                    Login
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    <Link href="/dashboard" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" size="sm" className="w-full text-foreground h-9 text-sm rounded-lg">
+                        Dashboard
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-auto text-red-500 h-9 text-sm rounded-lg px-3"
+                      onClick={() => { setMobileMenuOpen(false); signOut({ callbackUrl: '/' }) }}
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </Button>
+                  </>
+                ) : (
+                  <Link href="/login" className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full text-muted-foreground hover:text-foreground h-9 text-sm rounded-lg">
+                      Sign In
+                    </Button>
+                  </Link>
+                )}
               </div>
             </motion.div>
           )}

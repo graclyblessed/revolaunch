@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Building2, ThumbsUp, Users, Megaphone, Star, Clock,
-  TrendingUp, ArrowUpRight, ArrowDownRight, Database, Loader2
+  TrendingUp, ArrowUpRight, ArrowDownRight, Database, Loader2,
+  Send, Mail, Calendar, Eye
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -54,14 +55,42 @@ const tierColors: Record<string, string> = {
   'seo-growth': 'bg-green-500/10 text-green-400 border-green-500/20',
 }
 
+interface DigestPreview {
+  topStartups: Array<{ name: string; slug: string; tagline: string; logo: string | null; upvotes: number; category: string }>
+  newestStartups: Array<{ name: string; slug: string; tagline: string; logo: string | null; upvotes: number; category: string }>
+  stats: { totalStartups: number; totalVotes: number; totalSubscribers: number }
+  lastSend: { sent: number; total: number; date: string } | null
+  nextScheduled: string
+}
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [seeding, setSeeding] = useState(false)
   const [seedResult, setSeedResult] = useState<string | null>(null)
+  const [digestSending, setDigestSending] = useState(false)
+  const [digestResult, setDigestResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [digestPreview, setDigestPreview] = useState<DigestPreview | null>(null)
+  const [digestLoading, setDigestLoading] = useState(false)
+
+  const fetchDigestStatus = async () => {
+    try {
+      setDigestLoading(true)
+      const res = await fetch('/api/digest/preview')
+      if (res.ok) {
+        const data = await res.json()
+        setDigestPreview(data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch digest preview:', err)
+    } finally {
+      setDigestLoading(false)
+    }
+  }
 
   useEffect(() => {
     fetchStats()
+    fetchDigestStatus()
   }, [])
 
   const fetchStats = async () => {
@@ -75,6 +104,26 @@ export default function AdminDashboardPage() {
       console.error('Failed to fetch stats:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSendDigest = async () => {
+    if (!confirm('Send the weekly digest email to all subscribers right now?')) return
+    setDigestSending(true)
+    setDigestResult(null)
+    try {
+      const res = await fetch('/api/admin/digest/send', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        setDigestResult({ success: true, message: data.message || `Digest sent to ${data.sent} subscribers!` })
+        fetchDigestStatus()
+      } else {
+        setDigestResult({ success: false, message: data.error || 'Failed to send digest' })
+      }
+    } catch (err) {
+      setDigestResult({ success: false, message: 'Error: ' + (err as Error).message })
+    } finally {
+      setDigestSending(false)
     }
   }
 
@@ -253,6 +302,147 @@ export default function AdminDashboardPage() {
           )}
         </motion.div>
       </div>
+
+      {/* Weekly Digest */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.38, duration: 0.2 }}
+        className="rounded-xl border border-border surface p-5"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Send className="w-4 h-4 text-orange-500" />
+            <h3 className="text-sm font-semibold text-foreground">Weekly Digest</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Mail className="w-3 h-3" />
+              {digestPreview?.stats.totalSubscribers ?? stats?.totalSubscribers ?? '...'} subscribers
+            </span>
+            {digestPreview?.lastSend && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                Last: {new Date(digestPreview.lastSend.date).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {digestResult && (
+          <div className={cn(
+            'rounded-lg border px-4 py-3 mb-4',
+            digestResult.success
+              ? 'border-green-500/30 bg-green-500/5'
+              : 'border-red-500/30 bg-red-500/5'
+          )}>
+            <p className={cn(
+              'text-sm',
+              digestResult.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+            )}>
+              {digestResult.message}
+            </p>
+          </div>
+        )}
+
+        {digestLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : digestPreview ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Top Startups Preview */}
+              <div>
+                <div className="text-xs font-medium text-orange-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  Top 5 This Week
+                </div>
+                <div className="space-y-2">
+                  {digestPreview.topStartups.length > 0 ? digestPreview.topStartups.map((s, i) => (
+                    <div key={s.slug} className="flex items-center gap-2.5 p-2 rounded-lg bg-muted/30">
+                      <span className={cn(
+                        'text-xs font-bold w-5 text-center shrink-0',
+                        i === 0 ? 'text-orange-500' : i === 1 ? 'text-orange-400' : i === 2 ? 'text-orange-300' : 'text-muted-foreground'
+                      )}>{i + 1}</span>
+                      {s.logo ? (
+                        <img src={s.logo} alt={s.name} className="w-6 h-6 rounded-md object-cover shrink-0" />
+                      ) : (
+                        <div className="w-6 h-6 rounded-md bg-orange-500/20 flex items-center justify-center text-xs font-bold text-orange-400 shrink-0">
+                          {s.name.charAt(0)}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-foreground truncate">{s.name}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{s.tagline}</p>
+                      </div>
+                      <span className="text-[10px] text-orange-400 shrink-0">&#11088; {s.upvotes}</span>
+                    </div>
+                  )) : (
+                    <p className="text-xs text-muted-foreground py-2">No startups found.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Newest Launches Preview */}
+              <div>
+                <div className="text-xs font-medium text-orange-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                  <Star className="w-3 h-3" />
+                  Latest 3 Launches
+                </div>
+                <div className="space-y-2">
+                  {digestPreview.newestStartups.length > 0 ? digestPreview.newestStartups.map((s) => (
+                    <div key={s.slug} className="flex items-center gap-2.5 p-2 rounded-lg bg-muted/30">
+                      {s.logo ? (
+                        <img src={s.logo} alt={s.name} className="w-6 h-6 rounded-md object-cover shrink-0" />
+                      ) : (
+                        <div className="w-6 h-6 rounded-md bg-orange-500/20 flex items-center justify-center text-xs font-bold text-orange-400 shrink-0">
+                          {s.name.charAt(0)}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-foreground truncate">{s.name}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{s.tagline}</p>
+                      </div>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0">{s.category}</span>
+                    </div>
+                  )) : (
+                    <p className="text-xs text-muted-foreground py-2">No startups found.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Platform Stats + Send Button */}
+            <div className="flex items-center justify-between pt-3 border-t border-border">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Building2 className="w-3 h-3" />
+                  {digestPreview.stats.totalStartups} startups
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <ThumbsUp className="w-3 h-3" />
+                  {digestPreview.stats.totalVotes} stars
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Eye className="w-3 h-3" />
+                  Next: Monday 9 AM UTC
+                </div>
+              </div>
+              <button
+                onClick={handleSendDigest}
+                disabled={digestSending}
+                className="text-xs bg-orange-500 text-white hover:bg-orange-600 rounded-lg px-4 py-2 transition-colors flex items-center gap-1.5 disabled:opacity-50 font-medium"
+              >
+                {digestSending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                {digestSending ? 'Sending...' : 'Send Weekly Digest'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground py-4">Unable to load digest preview.</p>
+        )}
+      </motion.div>
 
       {/* Recent Startups */}
       <motion.div

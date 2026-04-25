@@ -29,9 +29,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Subject and content are required' }, { status: 400 })
     }
 
-    // Fetch all subscribers
+    // Fetch all subscribers with their unsubscribe token
     const subscribers = await db.subscriber.findMany({
-      select: { email: true },
+      select: { email: true, unsubscribeToken: true },
     })
 
     if (subscribers.length === 0) {
@@ -57,7 +57,8 @@ export async function POST(req: Request) {
       </div>`
       : ''
 
-    const htmlContent = `<!DOCTYPE html>
+    // Build HTML with per-subscriber unsubscribe placeholder
+    const buildHtml = (unsubscribeUrl: string) => `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
 <body style="background: #0a0a0a; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0;">
   <div style="max-width: 560px; margin: 0 auto; padding: 40px 20px;">
@@ -70,25 +71,37 @@ export async function POST(req: Request) {
     ${startupSection}
     <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #222;">
       <p style="font-size: 13px; color: #525252;">Browse more startups: <a href="${siteUrl}" style="color: #f97316;">${siteUrl.replace('https://', '')}</a></p>
+      <p style="font-size: 12px; color: #404040; margin-top: 12px;">
+        You received this email because you subscribed to Revolaunch. 
+        <a href="${unsubscribeUrl}" style="color: #737373; text-decoration: underline;">Unsubscribe</a>
+      </p>
     </div>
   </div>
 </body></html>`
 
     // Build batch payload (max 100 per request)
-    const allEmails = subscribers.map(s => s.email)
-    const batches: string[][] = []
-    for (let i = 0; i < allEmails.length; i += 100) {
-      batches.push(allEmails.slice(i, i + 100))
+    // Each email gets a personalized unsubscribe link and List-Unsubscribe header
+    type SubscriberRecord = { email: string; unsubscribeToken: string }
+    const batches: SubscriberRecord[][] = []
+    for (let i = 0; i < subscribers.length; i += 100) {
+      batches.push(subscribers.slice(i, i + 100))
     }
 
     let totalSent = 0
     for (const batch of batches) {
-      const payload = batch.map(to => ({
-        from: FROM_EMAIL,
-        to: [to],
-        subject: `[Revolaunch] ${subject}`,
-        html: htmlContent,
-      }))
+      const payload = batch.map(s => {
+        const unsubscribeUrl = `${siteUrl}/unsubscribe/${s.unsubscribeToken}`
+        return {
+          from: FROM_EMAIL,
+          to: [s.email],
+          subject: `[Revolaunch] ${subject}`,
+          html: buildHtml(unsubscribeUrl),
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        }
+      })
 
       const { error } = await resend.batch.send({ payload })
       if (error) {

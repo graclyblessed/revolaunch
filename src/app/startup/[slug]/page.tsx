@@ -25,11 +25,20 @@ import {
   Share2,
   Link2,
   Check,
+  Code2,
+  Copy,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import StartupLogo from '@/components/StartupLogo'
 import { cn } from '@/lib/utils'
 import { getCategoryIcon, getCategoryColor, getStageColor } from '@/lib/fallback-data'
@@ -303,6 +312,8 @@ export default function StartupProfilePage() {
   const [voting, setVoting] = useState(false)
   const [relatedStartups, setRelatedStartups] = useState<StartupData[]>([])
   const [copied, setCopied] = useState(false)
+  const [embedOpen, setEmbedOpen] = useState(false)
+  const [embedCopied, setEmbedCopied] = useState<string | null>(null)
 
   /* ---- Fetch startup data ---- */
   useEffect(() => {
@@ -407,6 +418,37 @@ export default function StartupProfilePage() {
       setCopied(true)
       toast.success('Link copied!')
       setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('Failed to copy')
+    }
+  }
+
+  /* ---- Embed helpers ---- */
+  const siteUrl = typeof window !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_SITE_URL || 'revolaunch.net')
+    : 'revolaunch.net'
+
+  const embedHtml = `<!-- ${startup.name} on Revolaunch -->
+<iframe src="https://${siteUrl}/embed?slug=${startup.slug}&embed=1" width="480" height="300" frameborder="0" scrolling="no" style="border:none;border-radius:12px;" title="${startup.name} on Revolaunch"></iframe>`
+
+  const embedReact = `export function RevolaunchEmbed() {
+  return (
+    <iframe
+      src="https://${siteUrl}/embed?slug=${startup.slug}&embed=1"
+      width={480}
+      height={300}
+      style={{ border: 'none', borderRadius: 12 }}
+      title="${startup.name} on Revolaunch"
+    />
+  )
+}`
+
+  const handleEmbedCopy = async (code: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(code)
+      setEmbedCopied(key)
+      toast.success('Copied!')
+      setTimeout(() => setEmbedCopied(null), 2500)
     } catch {
       toast.error('Failed to copy')
     }
@@ -730,8 +772,90 @@ export default function StartupProfilePage() {
               {copied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
               {copied ? 'Copied' : 'Copy link'}
             </Button>
+            <Button
+              onClick={() => setEmbedOpen(true)}
+              variant="outline"
+              className="rounded-xl h-10 px-4 text-sm text-muted-foreground hover:text-foreground gap-2"
+            >
+              <Code2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Embed</span>
+            </Button>
           </div>
         </motion.section>
+
+        {/* ================================================================
+            EMBED DIALOG
+            ================================================================ */}
+        <Dialog open={embedOpen} onOpenChange={setEmbedOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Code2 className="w-4 h-4 text-orange-500" />
+                Embed {startup.name}
+              </DialogTitle>
+              <DialogDescription>
+                Copy the code below to embed this startup card on your website.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {/* Preview */}
+              <div className="rounded-xl border border-border bg-muted/20 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500 font-bold text-sm shrink-0">
+                    {startup.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-foreground truncate">{startup.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{startup.tagline}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* HTML snippet */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-medium text-muted-foreground">HTML</span>
+                  <button
+                    onClick={() => handleEmbedCopy(embedHtml, 'html')}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {embedCopied === 'html' ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                    {embedCopied === 'html' ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+                <pre className="rounded-lg bg-muted/40 border border-border p-3 overflow-x-auto max-h-32">
+                  <code className="text-xs font-mono text-foreground/80 leading-relaxed whitespace-pre">{embedHtml}</code>
+                </pre>
+              </div>
+
+              {/* React snippet */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-medium text-muted-foreground">React Component</span>
+                  <button
+                    onClick={() => handleEmbedCopy(embedReact, 'react')}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {embedCopied === 'react' ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                    {embedCopied === 'react' ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+                <pre className="rounded-lg bg-muted/40 border border-border p-3 overflow-x-auto max-h-32">
+                  <code className="text-xs font-mono text-foreground/80 leading-relaxed whitespace-pre">{embedReact}</code>
+                </pre>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                This widget supports the{' '}
+                <a href="/embed" className="text-orange-500 hover:text-orange-400 font-medium">
+                  oEmbed standard
+                </a>{' '}
+                — paste the startup URL into Notion, Medium, or WordPress for auto-embedding.
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* ================================================================
             RELATED STARTUPS

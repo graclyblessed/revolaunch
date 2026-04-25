@@ -62,9 +62,10 @@ model Perk {
 }
 
 model Subscriber {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
+  id               String   @id @default(cuid())
+  email            String   @unique
+  unsubscribeToken String   @unique
+  createdAt        DateTime @default(now())
 }
 
 model SponsorSlot {
@@ -122,4 +123,14 @@ model ClaimEmail {
   updatedAt    DateTime  @updatedAt
 
   startup Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String
+  key         String    @unique
+  rateLimit   Int       @default(1000) // requests per hour
+  callsCount  Int       @default(0)
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
 }

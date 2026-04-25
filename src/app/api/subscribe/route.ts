@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import crypto from 'crypto'
 
 export async function POST(request: Request) {
   try {
@@ -8,9 +9,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 })
     }
 
+    const unsubscribeToken = crypto.randomBytes(18).toString('hex')
+
     // Try database
     const { db } = await import('@/lib/db')
-    const subscriber = await db.subscriber.create({ data: { email } }).catch((e: unknown) => {
+    const subscriber = await db.subscriber.create({
+      data: { email, unsubscribeToken },
+    }).catch((e: unknown) => {
       const prismaError = e as { code?: string }
       if (prismaError.code === 'P2002') throw new Error('duplicate')
       throw e

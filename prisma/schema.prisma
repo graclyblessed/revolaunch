@@ -35,6 +35,7 @@ model Startup {
 
   votes  Vote[]
   perks  Perk[]
+  claimEmail ClaimEmail?
 }
 
 model Vote {
@@ -101,4 +102,24 @@ model Banner {
   updatedAt    DateTime @updatedAt
 
   sponsor SponsorSlot? @relation(fields: [sponsorId], references: [id], onDelete: SetNull)
+}
+
+model ClaimEmail {
+  id           String    @id @default(cuid())
+  startupId    String    @unique
+  token        String    @unique
+  email        String
+  status       String    @default("pending") // pending, sent, delivered, bounced, opened, clicked, claimed, failed
+  resendId     String?
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  openedAt     DateTime?
+  clickedAt    DateTime?
+  claimedAt    DateTime?
+  bouncedAt    DateTime?
+  bounceReason String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  startup Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
 }

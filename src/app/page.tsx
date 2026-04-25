@@ -112,7 +112,10 @@ export default function Home() {
     return 0
   })
 
-  const displayedStartups = sortedStartups.slice(0, 12)
+  const [visibleCount, setVisibleCount] = useState(12)
+  const displayedStartups = sortedStartups.slice(0, visibleCount)
+  const hasMore = visibleCount < sortedStartups.length
+  const loadMore = () => setVisibleCount(prev => Math.min(prev + 12, sortedStartups.length))
 
   // Get top 3 featured startups for Premium Plus section
   const premiumStartups = useMemo(() => {
@@ -509,12 +512,21 @@ export default function Home() {
               </div>
             )}
 
-            {/* Load more hint */}
+            {/* Load more */}
             {!loading && displayedStartups.length > 0 && (
-              <div className="mt-10 text-center">
+              <div className="mt-10 flex flex-col items-center gap-3">
                 <p className="text-xs text-muted-foreground">
                   Showing {displayedStartups.length} of {filteredStartups.length} startups
                 </p>
+                {hasMore && (
+                  <Button
+                    variant="outline"
+                    onClick={loadMore}
+                    className="rounded-xl px-6 h-10 text-sm text-orange-500 border-orange-500/30 hover:bg-orange-500/10 hover:text-orange-500"
+                  >
+                    Load More
+                  </Button>
+                )}
               </div>
             )}
             </div>

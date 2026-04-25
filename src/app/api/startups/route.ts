@@ -165,6 +165,31 @@ export async function POST(request: Request) {
       },
     })
 
+    // Send confirmation email if email provided
+    if (email) {
+      try {
+        const { isResendConfigured, resend, FROM_EMAIL, SITE_URL } = await import('@/lib/resend')
+        if (isResendConfigured()) {
+          const SubmissionConfirmationEmail = (await import('@/emails/SubmissionConfirmationEmail')).default
+          await resend.emails.send({
+            from: FROM_EMAIL,
+            to: [email],
+            subject: `${name} is live on Revolaunch!`,
+            react: SubmissionConfirmationEmail({
+              startupName: name,
+              tagline,
+              tier: tier || 'free',
+              siteUrl: SITE_URL,
+            }),
+          })
+          console.log(`[Submit] Confirmation email sent to ${email}`)
+        }
+      } catch (emailErr) {
+        // Don't fail the submission if email fails
+        console.warn('[Submit] Failed to send confirmation email:', emailErr)
+      }
+    }
+
     return NextResponse.json({ startup: formatStartup(startup) }, { status: 201 })
   } catch (error) {
     console.error('[API POST /startups] Error:', error)

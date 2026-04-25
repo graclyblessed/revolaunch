@@ -78,4 +78,27 @@ model SponsorSlot {
   expiresAt   DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  banners Banner[]
+}
+
+model Banner {
+  id           String   @id @default(cuid())
+  sponsorId    String?  // optional link to sponsor
+  headline     String
+  description  String?
+  ctaText      String   @default("Learn More")
+  ctaUrl       String
+  imageUrl     String?  // background or hero image
+  logoUrl      String?  // sponsor logo
+  position     Int      @default(4) // after Nth startup card
+  status       String   @default("active") // active, paused, expired
+  impressions  Int      @default(0)
+  clicks       Int      @default(0)
+  startsAt     DateTime @default(now())
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sponsor SponsorSlot? @relation(fields: [sponsorId], references: [id], onDelete: SetNull)
 }

@@ -18,6 +18,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import StartupLogo from '@/components/StartupLogo'
 import FollowButton from '@/components/FollowButton'
+import InFeedBanner, { type BannerData } from '@/components/InFeedBanner'
 import { useFollowing } from '@/hooks/use-following'
 import {
   fallbackStartups, fallbackStats,
@@ -40,6 +41,7 @@ export default function Home() {
   const [stats, setStats] = useState(fallbackStats)
   const [categories, setCategories] = useState(fallbackCategories)
   const [sponsors, setSponsors] = useState<Array<{id:string,companyName:string,logo:string|null,website:string,tagline:string|null}>>([])
+  const [banner, setBanner] = useState<BannerData | null>(null)
   const [loading, setLoading] = useState(true)
   const [votedStartups, setVotedStartups] = useState<Set<string>>(new Set())
   const [search, setSearch] = useState('')
@@ -52,20 +54,26 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [startupsRes, statsRes, categoriesRes, sponsorsRes] = await Promise.allSettled([
+        const [startupsRes, statsRes, categoriesRes, sponsorsRes, bannerRes] = await Promise.allSettled([
           fetch('/api/startups?limit=24&sort=popular').then(r => r.json()),
           fetch('/api/stats').then(r => r.json()),
           fetch('/api/categories').then(r => r.json()),
           fetch('/api/sponsors').then(r => r.json()),
+          fetch('/api/banners').then(r => r.json()),
         ])
 
         const startupsData = startupsRes.status === 'fulfilled' ? startupsRes.value : {}
         const statsData = statsRes.status === 'fulfilled' ? statsRes.value : null
         const categoriesData = categoriesRes.status === 'fulfilled' ? categoriesRes.value : {}
         const sponsorsData = sponsorsRes.status === 'fulfilled' ? sponsorsRes.value : null
+        const bannerData = bannerRes.status === 'fulfilled' ? bannerRes.value : null
 
         if (sponsorsData && Array.isArray(sponsorsData.sponsors)) {
           setSponsors(sponsorsData.sponsors.filter((s: {status:string}) => s.status === 'active'))
+        }
+
+        if (bannerData?.banner) {
+          setBanner(bannerData.banner)
         }
 
         if (Array.isArray(startupsData.startups) && startupsData.startups.length > 0) {
@@ -422,9 +430,15 @@ export default function Home() {
             ) : (
               <div className="space-y-3">
                 <AnimatePresence>
-                  {displayedStartups.map((startup) => (
-                    <motion.div
-                      key={startup.id}
+                  {displayedStartups.map((startup, index) => (
+                    <div key={startup.id}>
+                      {/* Insert banner after Nth card */}
+                      {banner && index === banner.position && (
+                        <div className="mb-3">
+                          <InFeedBanner banner={banner} />
+                        </div>
+                      )}
+                      <motion.div
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
@@ -489,6 +503,7 @@ export default function Home() {
                         </div>
                       </div>
                     </motion.div>
+                    </div>
                   ))}
                 </AnimatePresence>
               </div>

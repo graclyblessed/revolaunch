@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Rocket, LayoutDashboard, Building2, Megaphone, Users, Settings,
-  LogOut, ChevronLeft, Menu, ExternalLink, Globe, BarChart3,
+  LogOut, ChevronLeft, Menu, ExternalLink, Globe, BarChart3, Image,
   ChevronRight
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ const sidebarItems = [
   { name: 'Overview', icon: LayoutDashboard, href: '/admin' },
   { name: 'Startups', icon: Building2, href: '/admin/startups' },
   { name: 'Sponsors', icon: Megaphone, href: '/admin/sponsors' },
+  { name: 'Banners', icon: Image, href: '/admin/banners' },
   { name: 'Subscribers', icon: Users, href: '/admin/subscribers' },
   { name: 'Analytics', icon: BarChart3, href: '/insight', external: true },
   { name: 'Settings', icon: Settings, href: '/admin/settings' },

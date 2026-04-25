@@ -33,7 +33,6 @@ export default function Footer() {
               <li><Link href="/community?type=mrr-board" className="text-xs text-muted-foreground hover:text-foreground transition-colors">MRR Board</Link></li>
               <li><Link href="/community?type=weekly-board" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Weekly Board</Link></li>
               <li><Link href="/community?type=raising-capital" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Raising Capital</Link></li>
-              <li><Link href="/community?type=job-board" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Job Board</Link></li>
             </ul>
           </div>
 

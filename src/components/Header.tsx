@@ -4,21 +4,17 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Rocket, ChevronDown, Users, TrendingUp, BarChart3,
-  Building2, Briefcase, Handshake, Gift,
+  Rocket, ChevronDown, TrendingUp, BarChart3,
+  Handshake,
   LogIn, Menu, X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import ThemeToggle from './ThemeToggle'
 
 const communityItems = [
-  { name: 'MRR Board', icon: BarChart3, href: '/community?type=mrr-board' },
   { name: 'Weekly Board', icon: TrendingUp, href: '/community?type=weekly-board' },
+  { name: 'MRR Board', icon: BarChart3, href: '/community?type=mrr-board' },
   { name: 'Raising Capital', icon: Handshake, href: '/community?type=raising-capital' },
-  { name: 'Job Board', icon: Briefcase, href: '/community?type=job-board' },
-  { name: 'Open to Acquisition', icon: Building2, href: '/community?type=open-to-acquisition' },
-  { name: 'Perks Directory', icon: Gift, href: '/community?type=perks-directory' },
-  { name: 'Affiliate Directory', icon: Users, href: '/community' },
 ]
 
 export default function Header() {

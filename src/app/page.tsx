@@ -233,6 +233,7 @@ export default function Home() {
                     transition={{ duration: 0.4, delay: index * 0.1 }}
                     className="group relative"
                   >
+                    <Link href={`/startup/${startup.slug}`} className="block relative z-10 h-full">
                     {/* Gradient border wrapper */}
                     <div className="absolute -inset-[2px] rounded-2xl bg-gradient-to-br from-orange-400 via-amber-400 to-orange-500 opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -274,9 +275,9 @@ export default function Home() {
                       </p>
 
                       {/* Footer: stars + link */}
-                      <div className="flex items-center justify-between pt-4 border-t border-border">
+                      <div className="flex items-center justify-between pt-4 border-t border-border" onClick={e => e.stopPropagation()}>
                         <button
-                          onClick={() => handleVote(startup.slug)}
+                          onClick={(e) => { e.stopPropagation(); handleVote(startup.slug) }}
                           className={`flex items-center gap-1.5 transition-colors ${
                             votedStartups.has(startup.slug)
                               ? 'text-orange-500'
@@ -300,6 +301,7 @@ export default function Home() {
 
                     {/* Subtle glow on hover */}
                     <div className="absolute -inset-4 rounded-3xl bg-orange-500/0 group-hover:bg-orange-500/5 transition-all duration-300 -z-10 blur-xl" />
+                    </Link>
                   </motion.div>
                 ))}
               </div>
@@ -441,6 +443,7 @@ export default function Home() {
                           <InFeedBanner banner={banner} />
                         </div>
                       )}
+                      <Link href={`/startup/${startup.slug}`} className="block">
                       <motion.div
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -477,7 +480,7 @@ export default function Home() {
                         </div>
 
                         {/* Right side — star + follow + link */}
-                        <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center gap-3 shrink-0" onClick={e => e.stopPropagation()}>
                           <FollowButton
                             isFollowing={isFollowing(startup.id)}
                             followerCount={getFollowerCount(startup.id)}
@@ -485,7 +488,7 @@ export default function Home() {
                             size="sm"
                           />
                           <button
-                            onClick={() => handleVote(startup.slug)}
+                            onClick={(e) => { e.stopPropagation(); handleVote(startup.slug) }}
                             className={`flex items-center gap-1 transition-colors ${
                               votedStartups.has(startup.slug)
                                 ? 'text-orange-500'
@@ -506,6 +509,7 @@ export default function Home() {
                         </div>
                       </div>
                     </motion.div>
+                      </Link>
                     </div>
                   ))}
                 </AnimatePresence>

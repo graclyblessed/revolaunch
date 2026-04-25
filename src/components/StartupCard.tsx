@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Star, MessageSquare, ExternalLink, Trophy, Sparkles } from 'lucide-react'
+import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import type { Startup } from '@/lib/fallback-data'
 import { getCategoryIcon, getCategoryColor, getStageColor } from '@/lib/fallback-data'
@@ -29,6 +30,7 @@ export default function StartupCard({ startup, rank, onVote, isVoted, compact, i
   }
 
   return (
+    <Link href={`/startup/${startup.slug}`}>
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
@@ -39,14 +41,14 @@ export default function StartupCard({ startup, rank, onVote, isVoted, compact, i
       <div className="p-4">
         <div className="flex items-start gap-3">
           {/* Medal / Vote */}
-          <div className="flex flex-col items-center gap-1 shrink-0">
+          <div className="flex flex-col items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
             {rank && medals[rank] ? (
               <div className={`w-10 h-10 rounded-xl ${medals[rank].bg} flex items-center justify-center text-lg`}>
                 {medals[rank].emoji}
               </div>
             ) : onVote ? (
               <button
-                onClick={() => onVote(startup.slug)}
+                onClick={(e) => { e.stopPropagation(); onVote(startup.slug) }}
                 className={`flex flex-col items-center gap-0.5 transition-all duration-200 ${
                   isVoted ? 'text-orange-500' : 'text-muted-foreground hover:text-orange-500'
                 }`}
@@ -125,6 +127,7 @@ export default function StartupCard({ startup, rank, onVote, isVoted, compact, i
         </div>
       </div>
     </motion.div>
+    </Link>
   )
 }
 
@@ -136,6 +139,7 @@ export function StartupCardFull({ startup, isFollowing, followerCount, onToggleF
 }) {
 
   return (
+    <Link href={`/startup/${startup.slug}`}>
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
@@ -180,7 +184,7 @@ export function StartupCardFull({ startup, isFollowing, followerCount, onToggleF
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-3 mt-3">
+            <div className="flex items-center gap-3 mt-3" onClick={e => e.stopPropagation()}>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Star className="w-3 h-3 text-amber-500" />
                 <span className="tabular-nums font-medium">{startup.upvotes}</span>
@@ -217,5 +221,6 @@ export function StartupCardFull({ startup, isFollowing, followerCount, onToggleF
         </div>
       </div>
     </motion.div>
+    </Link>
   )
 }

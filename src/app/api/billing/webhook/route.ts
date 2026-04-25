@@ -29,23 +29,46 @@ export async function POST(req: NextRequest) {
         const variantId = order.first_order_item?.variant_id
         const total = order.total
         const status = order.status
-        console.log(`[Webhook] Order created: $${total} | Status: ${status} | Variant: ${variantId}`)
+        const orderId = body.data?.id
+        console.log(`[Webhook] Order created: $${total} | Status: ${status} | Variant: ${variantId} | OrderID: ${orderId}`)
 
         // If order is paid, activate the launch tier on the startup
         if (status === 'paid' && tier) {
           try {
-            // Find the most recent pending startup by this founder
-            await db.startup.updateMany({
-              where: {
-                email: userId || undefined,
-                launchTier: tier,
-                status: 'active',
-              },
-              data: {
-                featured: tier === 'premium-plus' || tier === 'seo-growth',
-              },
+            // Determine tier benefits
+            const isPremiumPlus = tier === 'premium-plus'
+            const isSeoGrowth = tier === 'seo-growth'
+            const isPremium = tier === 'premium' || isPremiumPlus || isSeoGrowth
+            const isFeatured = isPremiumPlus || isSeoGrowth
+
+            // Build update data with full paid tier deliverables
+            const updateData: Record<string, unknown> = {
+              launchTier: tier,
+              featured: isFeatured,
+              badgeVerified: isPremium,
+              badgeVerifiedAt: isPremium ? new Date() : null,
+            }
+
+            // Set launch date if not already set (for paid tiers)
+            if (isPremium) {
+              // Assign next available launch date (2 days from now)
+              const launchDate = new Date()
+              launchDate.setDate(launchDate.getDate() + 2)
+              updateData.launchDate = launchDate
+            }
+
+            // Find and update the startup
+            const whereClause = userId
+              ? { email: userId, status: 'active' }
+              : { name: startupName, status: 'active' }
+
+            const result = await db.startup.updateMany({
+              where: whereClause,
+              data: updateData,
             })
-            console.log(`[Webhook] Activated ${tier} tier for ${startupName || userId}`)
+
+            console.log(`[Webhook] Activated ${tier} tier for ${startupName || userId}: ${result.count} startup(s) updated`)
+            console.log(`[Webhook] Benefits granted: featured=${isFeatured}, badgeVerified=${isPremium}, launchDate=${updateData.launchDate ? 'set' : 'no'}`)
           } catch (dbErr) {
             console.error('[Webhook] DB update failed:', dbErr)
           }
@@ -56,7 +79,28 @@ export async function POST(req: NextRequest) {
       case 'order_refunded': {
         const order = body.data.attributes
         console.log(`[Webhook] Order refunded: ${order.first_order_item?.variant_id} | Tier: ${tier}`)
-        // Could downgrade startup tier here if needed
+
+        // On refund, remove paid tier benefits but keep the listing
+        if (tier) {
+          try {
+            const whereClause = userId
+              ? { email: userId, status: 'active' }
+              : { name: startupName, status: 'active' }
+
+            await db.startup.updateMany({
+              where: whereClause,
+              data: {
+                launchTier: 'free',
+                featured: false,
+                badgeVerified: false,
+                badgeVerifiedAt: null,
+              },
+            })
+            console.log(`[Webhook] Downgraded ${startupName || userId} to free tier after refund`)
+          } catch (dbErr) {
+            console.error('[Webhook] Refund DB update failed:', dbErr)
+          }
+        }
         break
       }
 

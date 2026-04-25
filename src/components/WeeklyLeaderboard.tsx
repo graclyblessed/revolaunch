@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Star, Trophy } from 'lucide-react'
+import Link from 'next/link'
 import type { Startup } from '@/lib/fallback-data'
 import { getCategoryIcon, getCategoryColor } from '@/lib/fallback-data'
 import StartupLogo from '@/components/StartupLogo'
@@ -31,6 +32,7 @@ export default function WeeklyLeaderboard({ winners }: WeeklyLeaderboardProps) {
           const medal = medals[winner.medal]
 
           return (
+            <Link href={`/startup/${winner.slug}`} className="block">
             <motion.div
               key={winner.id}
               initial={{ opacity: 0, x: 20 }}
@@ -85,6 +87,7 @@ export default function WeeklyLeaderboard({ winners }: WeeklyLeaderboardProps) {
                 </div>
               </div>
             </motion.div>
+            </Link>
           )
         })}
       </div>

@@ -44,24 +44,56 @@ export async function GET(req: Request) {
 
     // Only active startups with emails
     where.status = 'active'
-    where.email = { not: null }
-    where.email = { not: '' }
+    where.AND = [
+      { email: { not: null } },
+      { email: { not: '' } },
+    ]
 
     const skip = (page - 1) * limit
 
-    const [startups, total] = await Promise.all([
-      db.startup.findMany({
-        where,
-        include: {
-          claimEmail: true,
-          _count: { select: { votes: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      db.startup.count({ where }),
-    ])
+    let startups
+    let total
+
+    try {
+      [startups, total] = await Promise.all([
+        db.startup.findMany({
+          where,
+          include: {
+            claimEmail: true,
+            _count: { select: { votes: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit,
+        }),
+        db.startup.count({ where }),
+      ])
+    } catch (dbError: unknown) {
+      // ClaimEmail table might not exist yet (schema not pushed to production)
+      const errMsg = (dbError as { message?: string }).message || ''
+      if (errMsg.includes('ClaimEmail') || errMsg.includes('claim_email') || errMsg.includes('does not exist') || errMsg.includes('relation')) {
+        console.warn('[Outreach] ClaimEmail table missing — falling back to startups without claim data')
+        // Remove claimEmail filter from where clause for the fallback query
+        const safeWhere = { ...where }
+        delete safeWhere.claimEmail
+        const results = await Promise.all([
+          db.startup.findMany({
+            where: safeWhere,
+            include: {
+              _count: { select: { votes: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit,
+          }),
+          db.startup.count({ where: safeWhere }),
+        ])
+        startups = results[0].map((s: Record<string, unknown>) => ({ ...s, claimEmail: null }))
+        total = results[1]
+      } else {
+        throw dbError
+      }
+    }
 
     return NextResponse.json({
       startups,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import {
@@ -38,31 +38,62 @@ function getSessionId() {
 
 export default function Home() {
   const [startups, setStartups] = useState<Startup[]>([])
+  const [totalStartups, setTotalStartups] = useState(0)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
   const [stats, setStats] = useState(fallbackStats)
   const [categories, setCategories] = useState(fallbackCategories)
   const [sponsors, setSponsors] = useState<Array<{id:string,companyName:string,logo:string|null,website:string,tagline:string|null}>>([])
   const [banner, setBanner] = useState<BannerData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [votedStartups, setVotedStartups] = useState<Set<string>>(new Set())
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedStage, setSelectedStage] = useState('all')
   const [sort, setSort] = useState('popular')
   const [showFilters, setShowFilters] = useState(false)
+  const [premiumStartups, setPremiumStartups] = useState<Startup[]>([])
   const { isFollowing, toggleFollow, getFollowerCount } = useFollowing()
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Debounce search input (300ms)
   useEffect(() => {
-    async function loadData() {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearch(search)
+    }, 300)
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+    }
+  }, [search])
+
+  // Build query params string from current filter state
+  const buildParams = useCallback((pageNum: number, limit = 24) => {
+    const params = new URLSearchParams()
+    params.set('page', String(pageNum))
+    params.set('limit', String(limit))
+    params.set('sort', sort)
+    if (debouncedSearch) params.set('search', debouncedSearch)
+    if (selectedCategory !== 'all') params.set('category', selectedCategory)
+    if (selectedStage !== 'all') params.set('stage', selectedStage)
+    return params.toString()
+  }, [debouncedSearch, selectedCategory, selectedStage, sort])
+
+  // Initial load: stats, categories, sponsors, banner + featured startups (independent of filters)
+  useEffect(() => {
+    async function loadInitialData() {
       try {
-        const [startupsRes, statsRes, categoriesRes, sponsorsRes, bannerRes] = await Promise.allSettled([
-          fetch('/api/startups?limit=24&sort=popular').then(r => r.json()),
+        const [featuredRes, statsRes, categoriesRes, sponsorsRes, bannerRes] = await Promise.allSettled([
+          fetch('/api/startups?featured=true&limit=3&sort=popular').then(r => r.json()),
           fetch('/api/stats').then(r => r.json()),
           fetch('/api/categories').then(r => r.json()),
           fetch('/api/sponsors').then(r => r.json()),
           fetch('/api/banners').then(r => r.json()),
         ])
 
-        const startupsData = startupsRes.status === 'fulfilled' ? startupsRes.value : {}
+        const featuredData = featuredRes.status === 'fulfilled' ? featuredRes.value : {}
         const statsData = statsRes.status === 'fulfilled' ? statsRes.value : null
         const categoriesData = categoriesRes.status === 'fulfilled' ? categoriesRes.value : {}
         const sponsorsData = sponsorsRes.status === 'fulfilled' ? sponsorsRes.value : null
@@ -76,10 +107,8 @@ export default function Home() {
           setBanner(bannerData.banner)
         }
 
-        if (Array.isArray(startupsData.startups) && startupsData.startups.length > 0) {
-          setStartups(startupsData.startups)
-        } else {
-          setStartups(fallbackStartups)
+        if (Array.isArray(featuredData.startups) && featuredData.startups.length > 0) {
+          setPremiumStartups(featuredData.startups)
         }
         if (statsData && typeof statsData === 'object' && !statsData.error) {
           setStats(statsData)
@@ -88,42 +117,75 @@ export default function Home() {
           setCategories(categoriesData.categories)
         }
       } catch {
-        setStartups(fallbackStartups)
-      } finally {
-        setLoading(false)
+        // Non-critical — featured section just won't show
       }
     }
-    loadData()
+    loadInitialData()
   }, [])
 
-  const filteredStartups = startups.filter(s => {
-    if (selectedCategory !== 'all' && s.category !== selectedCategory) return false
-    if (selectedStage !== 'all' && s.stage !== selectedStage) return false
-    if (search) {
-      const q = search.toLowerCase()
-      return s.name.toLowerCase().includes(q) || s.tagline.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)
+  // Fetch startups (server-side) when filters change — resets to page 1
+  useEffect(() => {
+    let cancelled = false
+    async function fetchStartups() {
+      setLoading(true)
+      try {
+        const res = await fetch(`/api/startups?${buildParams(1, 24)}`)
+        const data = await res.json()
+        if (cancelled) return
+        if (Array.isArray(data.startups) && data.startups.length > 0) {
+          setStartups(data.startups)
+        } else {
+          setStartups(fallbackStartups)
+        }
+        setTotalStartups(typeof data.total === 'number' ? data.total : 0)
+        setHasMore(data.page < data.totalPages)
+        setPage(1)
+      } catch {
+        if (!cancelled) {
+          setStartups(fallbackStartups)
+          setTotalStartups(fallbackStartups.length)
+          setHasMore(false)
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
-    return true
-  })
+    fetchStartups()
+    return () => { cancelled = true }
+  }, [buildParams])
 
-  const sortedStartups = [...filteredStartups].sort((a, b) => {
-    if (sort === 'popular') return b.upvotes - a.upvotes
-    if (sort === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    return 0
-  })
+  // Load more — fetch next page and append
+  const loadMore = async () => {
+    const nextPage = page + 1
+    setLoadingMore(true)
+    try {
+      const res = await fetch(`/api/startups?${buildParams(nextPage, 24)}`)
+      const data = await res.json()
+      if (Array.isArray(data.startups)) {
+        setStartups(prev => [...prev, ...data.startups])
+        setTotalStartups(typeof data.total === 'number' ? data.total : totalStartups)
+        setHasMore(data.page < data.totalPages)
+        setPage(nextPage)
+      }
+    } catch {
+      // Silently fail — user can retry
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
-  const [visibleCount, setVisibleCount] = useState(12)
-  const displayedStartups = sortedStartups.slice(0, visibleCount)
-  const hasMore = visibleCount < sortedStartups.length
-  const loadMore = () => setVisibleCount(prev => Math.min(prev + 12, sortedStartups.length))
+  // Build URL for "View all" link to /startups page preserving current filters
+  const startupsPageUrl = useMemo(() => {
+    const params = new URLSearchParams()
+    if (debouncedSearch) params.set('search', debouncedSearch)
+    if (selectedCategory !== 'all') params.set('category', selectedCategory)
+    if (selectedStage !== 'all') params.set('stage', selectedStage)
+    params.set('sort', sort)
+    const qs = params.toString()
+    return qs ? `/startups?${qs}` : '/startups'
+  }, [debouncedSearch, selectedCategory, selectedStage, sort])
 
-  // Get top 3 featured startups for Premium Plus section
-  const premiumStartups = useMemo(() => {
-    return [...startups]
-      .filter(s => s.featured)
-      .sort((a, b) => b.upvotes - a.upvotes)
-      .slice(0, 3)
-  }, [startups])
+  const hasActiveFilters = selectedCategory !== 'all' || selectedStage !== 'all' || debouncedSearch
 
   const handleVote = async (slug: string) => {
     const sessionId = getSessionId()
@@ -327,9 +389,9 @@ export default function Home() {
                 <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                   Trending Startups
                 </h2>
-                {!loading && (
+                {!loading && totalStartups > 0 && (
                   <span className="text-sm text-muted-foreground font-normal ml-1">
-                    ({filteredStartups.length})
+                    ({totalStartups})
                   </span>
                 )}
               </div>
@@ -411,7 +473,7 @@ export default function Home() {
                       variant="ghost"
                       size="sm"
                       className="h-9 text-xs text-muted-foreground hover:text-foreground"
-                      onClick={() => { setSelectedCategory('all'); setSelectedStage('all'); setSearch('') }}
+                      onClick={() => { setSelectedCategory('all'); setSelectedStage('all'); setSearch(''); setDebouncedSearch('') }}
                     >
                       <X className="w-3 h-3 mr-1" />
                       Clear
@@ -428,14 +490,14 @@ export default function Home() {
                   <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />
                 ))}
               </div>
-            ) : displayedStartups.length === 0 ? (
+            ) : startups.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-muted-foreground text-sm">No startups found.</p>
               </div>
             ) : (
               <div className="space-y-3">
                 <AnimatePresence>
-                  {displayedStartups.map((startup, index) => (
+                  {startups.map((startup, index) => (
                     <div key={startup.id}>
                       {/* Insert banner after Nth card */}
                       {banner && index === banner.position && (
@@ -517,19 +579,29 @@ export default function Home() {
             )}
 
             {/* Load more */}
-            {!loading && displayedStartups.length > 0 && (
+            {!loading && startups.length > 0 && (
               <div className="mt-10 flex flex-col items-center gap-3">
                 <p className="text-xs text-muted-foreground">
-                  Showing {displayedStartups.length} of {filteredStartups.length} startups
+                  Showing {startups.length} of {totalStartups} startups
                 </p>
                 {hasMore && (
                   <Button
                     variant="outline"
                     onClick={loadMore}
-                    className="rounded-xl px-6 h-10 text-sm text-orange-500 border-orange-500/30 hover:bg-orange-500/10 hover:text-orange-500"
+                    disabled={loadingMore}
+                    className="rounded-xl px-6 h-10 text-sm text-orange-500 border-orange-500/30 hover:bg-orange-500/10 hover:text-orange-500 disabled:opacity-50"
                   >
-                    Load More
+                    {loadingMore ? 'Loading…' : 'Load More'}
                   </Button>
+                )}
+                {hasActiveFilters && (
+                  <Link
+                    href={startupsPageUrl}
+                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-orange-500 transition-colors mt-1"
+                  >
+                    View all on Startups page
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
                 )}
               </div>
             )}

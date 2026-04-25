@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Rocket, ChevronDown, TrendingUp, BarChart3,
-  Handshake,
+  Handshake, Flame,
   LogIn, Menu, X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -42,6 +42,10 @@ export default function Header() {
             </Link>
             <Link href="/categories" className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted">
               Categories
+            </Link>
+            <Link href="/launch-day" className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted inline-flex items-center gap-1.5">
+              <Flame className="w-3.5 h-3.5" />
+              Launch Day
             </Link>
 
             {/* Community Dropdown */}
@@ -128,6 +132,10 @@ export default function Header() {
               </Link>
               <Link href="/categories" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
                 Categories
+              </Link>
+              <Link href="/launch-day" className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
+                <Flame className="w-4 h-4" />
+                Launch Day
               </Link>
               <div className="px-3 py-2">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Community</p>

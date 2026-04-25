@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft,
   Check,
@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import {
   Accordion,
   AccordionContent,
@@ -126,14 +127,30 @@ const fadeUp = {
 export default function SponsorPage() {
   const router = useRouter()
   const [loadingPlan, setLoadingPlan] = useState<SponsorPlan | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<SponsorPlan | null>(null)
+  const [form, setForm] = useState({ companyName: '', website: '' })
 
-  async function handleCheckout(plan: SponsorPlan) {
-    setLoadingPlan(plan)
+  function openCheckout(plan: SponsorPlan) {
+    setSelectedPlan(plan)
+    setShowForm(true)
+  }
+
+  async function handleCheckout() {
+    if (!selectedPlan || !form.companyName.trim()) {
+      toast.error('Please enter your company name')
+      return
+    }
+    setLoadingPlan(selectedPlan)
     try {
       const res = await fetch('/api/sponsor/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({
+          plan: selectedPlan,
+          sponsorName: form.companyName.trim(),
+          website: form.website.trim(),
+        }),
       })
 
       const data = await res.json()
@@ -143,6 +160,7 @@ export default function SponsorPage() {
       } else {
         // Demo mode
         toast.success('Sponsorship activated! (Demo mode)')
+        setShowForm(false)
         router.push('/')
       }
     } catch {
@@ -284,7 +302,7 @@ export default function SponsorPage() {
                 </ul>
 
                 <Button
-                  onClick={() => handleCheckout(plan.id)}
+                  onClick={() => openCheckout(plan.id)}
                   disabled={loadingPlan === plan.id}
                   className={`mt-6 w-full font-semibold ${
                     plan.highlight
@@ -461,7 +479,7 @@ export default function SponsorPage() {
           </motion.p>
           <motion.div custom={2} variants={fadeUp} className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Button
-              onClick={() => handleCheckout('3months')}
+              onClick={() => openCheckout('3months')}
               disabled={loadingPlan === '3months'}
               size="lg"
               className="bg-white text-[#F97316] font-semibold hover:bg-orange-50"
@@ -517,6 +535,93 @@ export default function SponsorPage() {
         </motion.section>
       </main>
       <Footer />
+
+      {/* Sponsor Info Modal */}
+      <AnimatePresence>
+        {showForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60"
+              onClick={() => setShowForm(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6"
+            >
+              <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 p-1 rounded-md hover:bg-muted">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+
+              <div className="mb-5">
+                <div className="flex items-center gap-2 mb-1">
+                  <Megaphone className="w-5 h-5 text-[#F97316]" />
+                  <h2 className="text-lg font-semibold text-foreground">Almost there!</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Tell us about your company so we can set up your sponsorship.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground">Company Name *</label>
+                  <Input
+                    required
+                    placeholder="e.g., DigitalOcean"
+                    value={form.companyName}
+                    onChange={e => setForm(f => ({ ...f, companyName: e.target.value }))}
+                    className="h-10 rounded-lg"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground">Website URL</label>
+                  <Input
+                    placeholder="https://yourcompany.com"
+                    value={form.website}
+                    onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
+                    className="h-10 rounded-lg"
+                  />
+                </div>
+
+                <div className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
+                  <p><strong>Selected plan:</strong> {SPONSOR_PLANS[selectedPlan!]?.name} ({SPONSOR_PLANS[selectedPlan!]?.priceLabel})</p>
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <Button variant="outline" onClick={() => setShowForm(false)} className="flex-1 h-10 rounded-lg">
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleCheckout}
+                    disabled={loadingPlan !== null}
+                    className="flex-1 h-10 rounded-lg bg-[#F97316] text-white hover:bg-orange-600 font-semibold"
+                  >
+                    {loadingPlan ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                        </svg>
+                        Processing…
+                      </span>
+                    ) : (
+                      <>
+                        <CreditCard className="w-4 h-4 mr-1.5" />
+                        Continue to Payment
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

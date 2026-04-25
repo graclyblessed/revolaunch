@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await createCheckout({
       storeId: process.env.LEMONSQUEEZY_STORE_ID || '',
       variantId,
-      custom: { plan, sponsorName, website },
+      custom: { plan, sponsorName: sponsorName || '', website: website || '' },
       checkoutData: {
         redirectUrl,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),

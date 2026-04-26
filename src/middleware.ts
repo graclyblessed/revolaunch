@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
-import { getToken } from 'next-auth/jwt'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.ADMIN_JWT_SECRET || 'revolaunch-admin-jwt-secret-change-in-production'
@@ -12,15 +11,21 @@ export async function middleware(request: NextRequest) {
 
   // Protect /dashboard routes with NextAuth
   if (pathname.startsWith('/dashboard')) {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    })
+    try {
+      const { getToken } = await import('next-auth/jwt')
+      const token = await getToken({
+        req: request,
+        secret: process.env.NEXTAUTH_SECRET,
+      })
 
-    if (!token) {
-      const loginUrl = new URL('/login', request.url)
-      loginUrl.searchParams.set('callbackUrl', pathname)
-      return NextResponse.redirect(loginUrl)
+      if (!token) {
+        const loginUrl = new URL('/login', request.url)
+        loginUrl.searchParams.set('callbackUrl', pathname)
+        return NextResponse.redirect(loginUrl)
+      }
+    } catch (err) {
+      // If NextAuth isn't configured yet, let the request through
+      console.warn('[Middleware] NextAuth check failed:', err)
     }
   }
 

@@ -309,7 +309,7 @@ export default function AdminStartupsPage() {
                           )} />
                         </button>
                         <a
-                          href={`/${startup.slug}`}
+                          href={`/startup/${startup.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-1.5 rounded-md hover:bg-muted transition-colors"

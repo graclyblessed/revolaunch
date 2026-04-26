@@ -190,6 +190,38 @@ export async function POST(request: Request) {
       }
     }
 
+    // Auto-enrich in the background (fire-and-forget — don't block the response)
+    if (website) {
+      // Use setImmediate-like approach with a microtask so we return immediately
+      ;(async () => {
+        try {
+          const { scrapeStartup } = await import('@/lib/scrape')
+          const scraped = await scrapeStartup(website)
+
+          const updateData: Record<string, any> = {}
+          if (scraped.logo) updateData.logo = scraped.logo
+          if (scraped.twitter) {
+            updateData.twitter = scraped.twitter.startsWith('@')
+              ? `https://x.com/${scraped.twitter.slice(1)}`
+              : scraped.twitter
+          }
+          if (scraped.linkedin) updateData.linkedin = scraped.linkedin
+          if (scraped.description) updateData.description = scraped.description
+
+          if (Object.keys(updateData).length > 0) {
+            await db.startup.update({
+              where: { slug },
+              data: updateData,
+            })
+            console.log(`[AutoEnrich] Updated ${name}: ${Object.keys(updateData).join(', ')}`)
+          }
+        } catch (err) {
+          // Auto-enrichment failure should never affect the user experience
+          console.warn(`[AutoEnrich] Background enrichment failed for ${name}:`, err)
+        }
+      })()
+    }
+
     return NextResponse.json({ startup: formatStartup(startup) }, { status: 201 })
   } catch (error) {
     console.error('[API POST /startups] Error:', error)

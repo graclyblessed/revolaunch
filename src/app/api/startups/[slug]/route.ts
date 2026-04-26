@@ -34,8 +34,7 @@ export async function GET(
       }
     }
 
-    // ── Fallback: static data if DB is down ──
-    console.warn(`[API /startups/${slug}] Database unavailable, using fallback data`)
+    // ── Fallback: static data (if DB is down OR startup not in DB) ──
     const startup = fallbackStartups.find(s => s.slug === slug)
     if (startup) {
       const perks = fallbackPerks[slug] || []

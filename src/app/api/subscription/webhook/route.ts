@@ -1,9 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyLemonSqueezySignature } from '@/lib/lemonsqueezy'
 import { db, isDbAvailable } from '@/lib/db'
+import { SUBSCRIPTION_VARIANTS } from '@/lib/lemonsqueezy-client'
+
+// Reverse lookup: variant_id → plan name
+function getPlanFromVariantId(variantId: string): string {
+  for (const [plan, vid] of Object.entries(SUBSCRIPTION_VARIANTS)) {
+    if (vid === variantId) return plan
+  }
+  return 'pro' // Default fallback
+}
+
+// Tier to API rate limits
+const TIER_LIMITS: Record<string, number> = {
+  free: 1000,
+  pro: 10_000,
+  enterprise: 100_000,
+}
 
 // POST /api/subscription/webhook — Handle LemonSqueezy subscription webhooks
-// Processes: subscription_created, subscription_updated, subscription_cancelled
+// Processes: subscription_created, subscription_updated, subscription_cancelled, subscription_expired
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text()
@@ -20,12 +36,15 @@ export async function POST(req: NextRequest) {
     const subscriptionData = body.data
     const attrs = subscriptionData?.attributes
     const lemonSqueezyId = subscriptionData?.id?.toString()
-    const userEmail = attrs?.user_email || ''
+    const userEmail = attrs?.user_email || attrs?.customer_email || ''
     const status = attrs?.status // active, paused, cancelled, expired, past_due
     const currentPeriodEnd = attrs?.renews_at ? new Date(attrs.renews_at) : null
-    const plan = 'pro' // Default plan; adjust based on variant_id if needed
+    const variantId = attrs?.variant_id?.toString() || ''
 
-    console.log(`[Subscription Webhook] ${eventName} | ID: ${lemonSqueezyId} | Email: ${userEmail} | Status: ${status}`)
+    // Detect plan from variant_id (instead of hardcoding 'pro')
+    const plan = getPlanFromVariantId(variantId)
+
+    console.log(`[Subscription Webhook] ${eventName} | ID: ${lemonSqueezyId} | Email: ${userEmail} | Plan: ${plan} | Status: ${status}`)
 
     if (!db || !(await isDbAvailable())) {
       console.error('[Subscription Webhook] Database not available')
@@ -50,79 +69,52 @@ export async function POST(req: NextRequest) {
     }
 
     switch (eventName) {
-      case 'subscription_created': {
-        try {
-          // Check if subscription already exists (idempotent)
-          const existing = await db.subscription.findUnique({
-            where: { lemonSqueezyId },
-          })
-
-          if (existing) {
-            // Update existing
-            await db.subscription.update({
-              where: { lemonSqueezyId },
-              data: {
-                email: userEmail,
-                status: mapStatus(status),
-                currentPeriodEnd,
-              },
-            })
-            console.log(`[Subscription Webhook] Updated existing subscription: ${lemonSqueezyId}`)
-          } else {
-            // Create new
-            await db.subscription.create({
-              data: {
-                email: userEmail,
-                plan,
-                status: mapStatus(status),
-                lemonSqueezyId,
-                currentPeriodEnd,
-              },
-            })
-            console.log(`[Subscription Webhook] Created new subscription: ${lemonSqueezyId} for ${userEmail}`)
-          }
-        } catch (dbErr) {
-          console.error('[Subscription Webhook] DB error (subscription_created):', dbErr)
-        }
-        break
-      }
-
+      case 'subscription_created':
       case 'subscription_updated': {
         try {
-          const existing = await db.subscription.findUnique({
+          // Upsert subscription record
+          await db.subscription.upsert({
             where: { lemonSqueezyId },
+            create: {
+              email: userEmail,
+              plan,
+              status: mapStatus(status),
+              lemonSqueezyId,
+              currentPeriodEnd,
+            },
+            update: {
+              email: userEmail,
+              plan,
+              status: mapStatus(status),
+              currentPeriodEnd,
+            },
           })
 
-          if (existing) {
-            await db.subscription.update({
-              where: { lemonSqueezyId },
-              data: {
-                email: userEmail,
-                status: mapStatus(status),
-                currentPeriodEnd,
-              },
+          // Auto-upgrade API keys: if user has API keys, boost them to match subscription tier
+          if (plan && mapStatus(status) === 'active') {
+            const monthlyLimit = TIER_LIMITS[plan] || TIER_LIMITS.pro
+            const upgraded = await db.apiKey.updateMany({
+              where: { name: { contains: userEmail } }, // Best-effort match by email in key name
+              data: { tier: plan, monthlyRateLimit: monthlyLimit, rateLimit: monthlyLimit },
             })
-            console.log(`[Subscription Webhook] Updated subscription: ${lemonSqueezyId} -> ${status}`)
-          } else {
-            // Create if doesn't exist (shouldn't happen but safety net)
-            await db.subscription.create({
-              data: {
-                email: userEmail,
-                plan,
-                status: mapStatus(status),
-                lemonSqueezyId,
-                currentPeriodEnd,
-              },
-            })
-            console.log(`[Subscription Webhook] Created subscription on update: ${lemonSqueezyId}`)
+            if (upgraded.count > 0) {
+              console.log(`[Subscription Webhook] Upgraded ${upgraded.count} API key(s) to ${plan} for ${userEmail}`)
+            }
+
+            // Also try matching via a subscription email mapping
+            // (users who created keys with a different name won't be auto-upgraded,
+            //  but their rate limits will be enforced via the subscription record)
           }
+
+          console.log(`[Subscription Webhook] ${eventName === 'subscription_created' ? 'Created' : 'Updated'} subscription: ${lemonSqueezyId} (${plan}) for ${userEmail}`)
         } catch (dbErr) {
-          console.error('[Subscription Webhook] DB error (subscription_updated):', dbErr)
+          console.error(`[Subscription Webhook] DB error (${eventName}):`, dbErr)
         }
         break
       }
 
-      case 'subscription_cancelled': {
+      case 'subscription_cancelled':
+      case 'subscription_expired': {
         try {
           const existing = await db.subscription.findUnique({
             where: { lemonSqueezyId },
@@ -132,13 +124,23 @@ export async function POST(req: NextRequest) {
             await db.subscription.update({
               where: { lemonSqueezyId },
               data: {
-                status: 'cancelled',
+                status: eventName === 'subscription_expired' ? 'expired' : 'cancelled',
               },
             })
-            console.log(`[Subscription Webhook] Cancelled subscription: ${lemonSqueezyId}`)
+
+            // Downgrade API keys back to free tier
+            const downgraded = await db.apiKey.updateMany({
+              where: { name: { contains: userEmail }, tier: existing.plan },
+              data: { tier: 'free', monthlyRateLimit: TIER_LIMITS.free, rateLimit: TIER_LIMITS.free },
+            })
+            if (downgraded.count > 0) {
+              console.log(`[Subscription Webhook] Downgraded ${downgraded.count} API key(s) to free for ${userEmail}`)
+            }
+
+            console.log(`[Subscription Webhook] ${eventName}: ${lemonSqueezyId}`)
           }
         } catch (dbErr) {
-          console.error('[Subscription Webhook] DB error (subscription_cancelled):', dbErr)
+          console.error(`[Subscription Webhook] DB error (${eventName}):`, dbErr)
         }
         break
       }

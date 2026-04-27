@@ -1,11 +1,25 @@
-import { NextResponse } from 'next/server'
-import { apiResponse } from '@/lib/api-auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { apiResponse, corsHeaders } from '@/lib/api-auth'
+import {
+  createCheckout,
+  isLemonSqueezyConfigured,
+  getVariantForSubscriptionPlan,
+} from '@/lib/lemonsqueezy-client'
 
-// POST /api/api-subscription/checkout — Placeholder for API tier checkout
-export async function POST(request: Request) {
+// API tier pricing details (for receipt display)
+const API_TIER_DETAILS: Record<string, { name: string; monthlyLimit: number; price: string }> = {
+  pro: { name: 'Pro', monthlyLimit: 10_000, price: '$19/mo' },
+  enterprise: { name: 'Enterprise', monthlyLimit: 100_000, price: '$79/mo' },
+}
+
+// POST /api/api-subscription/checkout — Create a LemonSqueezy checkout for API tier upgrade
+export async function POST(request: NextRequest) {
+  const preflightResponse = handlePreflight(request)
+  if (preflightResponse) return preflightResponse
+
   try {
     const body = await request.json()
-    const { tier, email } = body
+    const { tier, email, redirectUrl: customRedirect } = body
 
     // Validate inputs
     const validTiers = ['pro', 'enterprise']
@@ -17,29 +31,73 @@ export async function POST(request: Request) {
       return apiResponse({ error: 'A valid email address is required.' }, 400)
     }
 
-    // Check if LemonSqueezy is configured
-    const lemonSqueezyKey = process.env.LEMONSQUEEZY_API_KEY
-    const isConfigured = !!lemonSqueezyKey
-
-    if (isConfigured) {
-      // Placeholder: in production, create a LemonSqueezy checkout here
-      // For now, return a message indicating the feature is coming
+    // If LemonSqueezy not configured, return demo message
+    if (!isLemonSqueezyConfigured) {
       return apiResponse({
         demo: true,
         tier,
         email,
-        message: `API subscription checkout for "${tier}" tier is not yet configured. Subscription products will be available soon. Contact sales@revolaunch.net for early access.`,
+        tierDetails: API_TIER_DETAILS[tier],
+        message: `API subscription checkout for "${tier}" tier is not yet configured. Subscription products will be available once LemonSqueezy is set up. Contact hello@revolaunch.net for early access.`,
       }, 200)
     }
 
+    const variantId = getVariantForSubscriptionPlan(tier)
+    if (!variantId) {
+      return apiResponse(
+        { error: `No product variant configured for API "${tier}" tier. Set LEMONSQUEEZY_VARIANT_SUBSCRIPTION_${tier.toUpperCase()} in env.` },
+        { status: 500 }
+      )
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://revolaunch.net'
+    const redirectUrl = customRedirect || `${appUrl}/api/subscription?tier=${tier}&status=success`
+    const successUrl = `${appUrl}/api/subscription?tier=${tier}&status=success`
+
+    const { data, error } = await createCheckout({
+      storeId: process.env.LEMONSQUEEZY_STORE_ID || '',
+      variantId,
+      productOptions: {
+        name: `Revolaunch API — ${API_TIER_DETAILS[tier].name}`,
+        description: `${API_TIER_DETAILS[tier].monthlyLimit.toLocaleString()} requests/month with priority support`,
+        receiptButtonText: 'Upgrade API Access',
+        redirectUrl,
+      },
+      checkoutData: {
+        email,
+        custom: {
+          type: 'api_subscription',
+          tier,
+          email,
+        },
+      },
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h expiry
+    })
+
+    if (error) {
+      console.error('[API Subscription Checkout] LemonSqueezy error:', error)
+      return apiResponse({ error: 'Failed to create checkout session' }, 500)
+    }
+
     return apiResponse({
-      demo: true,
+      checkoutUrl: data?.url,
+      checkoutId: data?.id,
       tier,
-      email,
-      message: 'API subscription checkout not yet configured. Contact sales@revolaunch.net',
-    }, 200)
+      tierDetails: API_TIER_DETAILS[tier],
+    }, 201)
   } catch (error) {
     console.error('[API Subscription Checkout] Error:', error)
     return apiResponse({ error: 'Failed to process checkout request' }, 500)
   }
+}
+
+function handlePreflight(request: Request): Response | null {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders() })
+  }
+  return null
+}
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: corsHeaders() })
 }

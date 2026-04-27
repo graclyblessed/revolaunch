@@ -7,10 +7,18 @@ export interface ApiAuthResult {
   error?: string
 }
 
+// Tier rate limits (requests per month)
+const TIER_MONTHLY_LIMITS: Record<string, number> = {
+  free: 1000,
+  pro: 10_000,
+  enterprise: 100_000,
+}
+
 /**
  * Validate an API key from the request.
  * Supports both `Authorization: Bearer <key>` and `?api_key=<key>` query param.
- * Checks rate limit (callsCount in the last hour) and increments usage on success.
+ * Enforces monthly rate limits based on the key's tier.
+ * Automatically resets counters at the start of each month.
  */
 export async function validateApiKey(request: Request): Promise<ApiAuthResult> {
   if (!db) {
@@ -42,30 +50,33 @@ export async function validateApiKey(request: Request): Promise<ApiAuthResult> {
     return { valid: false, error: 'Invalid API key' }
   }
 
-  // 3. Check rate limit — prefer monthlyRateLimit, fall back to rateLimit
+  // 3. Determine effective monthly limit
   const effectiveLimit = apiKey.monthlyRateLimit && apiKey.monthlyRateLimit > 0
     ? apiKey.monthlyRateLimit
-    : apiKey.rateLimit
+    : TIER_MONTHLY_LIMITS[apiKey.tier] || TIER_MONTHLY_LIMITS.free
 
+  // 4. Check monthly rate limit
+  // Reset counter if we're in a new month since the key was last used
   const now = new Date()
-  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
+  const lastUsed = apiKey.lastUsedAt
 
-  if (apiKey.lastUsedAt && apiKey.lastUsedAt > oneHourAgo) {
-    if (apiKey.callsCount >= effectiveLimit) {
+  if (lastUsed) {
+    // If lastUsed was in a previous month, reset the counter
+    if (lastUsed.getFullYear() !== now.getFullYear() || lastUsed.getMonth() !== now.getMonth()) {
+      await db.apiKey.update({
+        where: { id: apiKey.id },
+        data: { callsCount: 0, lastUsedAt: now },
+      })
+    } else if (apiKey.callsCount >= effectiveLimit) {
+      // Same month but limit exceeded
       return {
         valid: false,
-        error: `Rate limit exceeded (${effectiveLimit} requests per hour). Try again later.`,
+        error: `Monthly rate limit exceeded (${effectiveLimit.toLocaleString()} requests). Your limit resets on the 1st of next month. Upgrade your plan for more requests.`,
       }
     }
-  } else {
-    // Hour has elapsed — reset counter
-    await db.apiKey.update({
-      where: { id: apiKey.id },
-      data: { callsCount: 0 },
-    })
   }
 
-  // 4. Increment usage
+  // 5. Increment usage
   await db.apiKey.update({
     where: { id: apiKey.id },
     data: {

@@ -109,8 +109,11 @@ export async function GET(request: Request) {
 // ─── URL & Submission Validation ───
 
 /** Blocked/spam TLDs and domains */
-const BLOCKED_TLDS = ['.xyz', '.top', '.click', '.buzz', '.surf', '.monster', '.icu', '.club', '.work', '.info', '.biz', '.online', '.site', '.space', '.website', '.tech', '.cc', '.tk', '.ml', '.ga', '.cf']
+const BLOCKED_TLDS = ['.xyz', '.top', '.click', '.buzz', '.surf', '.monster', '.icu', '.club', '.work', '.info', '.biz', '.online', '.site', '.space', '.website', '.tech', '.cc', '.tk', '.ml', '.ga', '.cf', '.pw', '.bar', '.life', '.gq', '.win', '.bid', '.stream', '.download', '.racing', '.party', '.review', '.trade', '.date', '.loan', '.cricket', '.science', '.men', '.pro', '.faith', '.zip', '.mov', '.mp4', '.ong']
 const BLOCKED_DOMAINS = ['mexty.fr', 'stellaflow.io']
+
+/** Allowed TLDs — only these can be used for new submissions */
+const ALLOWED_TLDS = ['.com', '.io', '.co', '.dev', '.ai', '.app', '.me', '.ly', '.so', '.is', '.sh', '.it', '.de', '.fr', '.uk', '.eu', '.es', '.nl', '.be', '.ch', '.at', '.se', '.no', '.dk', '.fi', '.ie', '.pt', '.pl', '.cz', '.ro', '.hu', '.gr', '.ca', '.us', '.mx', '.br', '.ar', '.cl', '.co', '.com.au', '.co.nz', '.co.za', '.com.br', '.co.uk', '.org', '.net', '.cloud', '.tech', '.health', '.law', '.phd', '.live', '.studio', '.design', '.world', '.group', '.inc', '.corp', '.llc', '.nz', '.au', '.in', '.jp', '.kr', '.sg', '.id', '.vn', '.th', '.hk', '.tw']
 
 /** List of well-known free hosting / link-in-bio platforms */
 const FREE_HOSTING_DOMAINS = [
@@ -120,7 +123,7 @@ const FREE_HOSTING_DOMAINS = [
 ]
 
 /** Normalize a URL and extract its hostname */
-function normalizeAndParseUrl(raw: string): { normalized: string; hostname: string } | null {
+function normalizeAndParseUrl(raw: string): { normalized: string; hostname: string; pathname: string } | null {
   try {
     let url = raw.trim()
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -133,7 +136,7 @@ function normalizeAndParseUrl(raw: string): { normalized: string; hostname: stri
     if (pathParts.some(p => p.includes('.')) && !pathParts[pathParts.length - 1].match(/^(index|home|app)?(\.html?)?$/i)) {
       return null
     }
-    return { normalized: url, hostname: parsed.hostname.replace(/^www\./, '') }
+    return { normalized: url, hostname: parsed.hostname.replace(/^www\./, ''), pathname: parsed.pathname }
   } catch {
     return null
   }
@@ -144,11 +147,25 @@ function isValidStartupUrl(raw: string): { valid: boolean; error?: string } {
   const parsed = normalizeAndParseUrl(raw)
   if (!parsed) return { valid: false, error: 'Please provide a valid startup homepage URL (not a deep link or file path).' }
 
-  const { normalized, hostname } = parsed
+  const { hostname, pathname } = parsed
+
+  // Reject deep-link URLs (e.g., mexty.fr/nav3/entree.htm)
+  if (pathname !== '/' && pathname !== '') {
+    return { valid: false, error: 'Only root domain URLs are accepted (e.g., https://example.com). Deep links and file paths are not allowed.' }
+  }
 
   // Check blocked TLDs
   if (BLOCKED_TLDS.some(tld => hostname.endsWith(tld))) {
     return { valid: false, error: 'This domain extension is not allowed. Please use a standard domain (.com, .io, .co, .dev, etc.).' }
+  }
+
+  // Whitelist check: domain must use a known TLD
+  const hasAllowedTld = ALLOWED_TLDS.some(tld => {
+    if (tld.startsWith('.')) return hostname.endsWith(tld)
+    return hostname === tld
+  })
+  if (!hasAllowedTld) {
+    return { valid: false, error: 'This domain extension is not recognized. Please use a standard domain (e.g., .com, .io, .co, .dev, .ai, .app).' }
   }
 
   // Check blocked domains
@@ -167,6 +184,37 @@ function isValidStartupUrl(raw: string): { valid: boolean; error?: string } {
   }
 
   return { valid: true }
+}
+
+/** Verify that a URL is actually reachable (returns a real webpage) */
+async function verifyUrlReachable(url: string): Promise<{ reachable: boolean; error?: string }> {
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000) // 8s timeout
+
+    const response = await fetch(url, {
+      method: 'HEAD',
+      redirect: 'follow',
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'RevolaunchBot/1.0 (Startup Directory Verification)',
+        'Accept': 'text/html,application/xhtml+xml,*/*',
+      },
+    })
+    clearTimeout(timeout)
+
+    // Accept any 2xx or 3xx (redirects were followed)
+    if (response.status >= 200 && response.status < 400) {
+      return { reachable: true }
+    }
+
+    return { reachable: false, error: `The website returned HTTP ${response.status}. Please verify the URL is correct and the site is live.` }
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      return { reachable: false, error: 'The website took too long to respond. Please verify the URL and try again.' }
+    }
+    return { reachable: false, error: 'Could not reach the website. Please verify the URL is correct and the site is accessible.' }
+  }
 }
 
 /** Basic email validation */
@@ -201,6 +249,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: urlCheck.error }, { status: 400 })
     }
 
+    // ─── URL reachability check (verify the site actually exists) ───
+    const parsedUrl = normalizeAndParseUrl(website)
+    if (parsedUrl) {
+      const reachable = await verifyUrlReachable(parsedUrl.normalized)
+      if (!reachable.reachable) {
+        return NextResponse.json({ error: reachable.error }, { status: 400 })
+      }
+    }
+
     // ─── Email validation (required for submission) ───
     if (!email || !isValidEmail(email)) {
       return NextResponse.json(
@@ -227,9 +284,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // Normalize the website URL
-    const parsedUrl = normalizeAndParseUrl(website)!
-    const normalizedWebsite = parsedUrl.normalized
+    // Normalize the website URL (parsedUrl already declared above)
+    const normalizedWebsite = parsedUrl!.normalized
 
     // Generate slug from name
     const slug = trimmedName

@@ -400,7 +400,11 @@ export default function StartupProfilePage() {
     fetchRelated()
   }, [startup])
 
-  /* ---- Share handlers ---- */
+  /* ---- Render states (must come BEFORE any startup.* access) ---- */
+  if (loading) return <LoadingSkeleton />
+  if (notFound || !startup) return <NotFoundState />
+
+  /* ---- Share handlers (safe: startup is guaranteed non-null below) ---- */
   const pageUrl = typeof window !== 'undefined' ? window.location.href : ''
   const shareText = `Check out ${startup.name} on Revolaunch — ${startup.tagline}`
 
@@ -453,10 +457,6 @@ export default function StartupProfilePage() {
       toast.error('Failed to copy')
     }
   }
-
-  /* ---- Render states ---- */
-  if (loading) return <LoadingSkeleton />
-  if (notFound || !startup) return <NotFoundState />
 
   /* ---- Derived values ---- */
   const tier = LAUNCH_TIERS[(startup.launchTier as LaunchTier) || 'free'] || LAUNCH_TIERS.free

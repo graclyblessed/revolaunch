@@ -129,13 +129,15 @@ model ClaimEmail {
 }
 
 model ApiKey {
-  id          String    @id @default(cuid())
-  name        String
-  key         String    @unique
-  rateLimit   Int       @default(1000) // requests per hour
-  callsCount  Int       @default(0)
-  lastUsedAt  DateTime?
-  createdAt   DateTime  @default(now())
+  id               String    @id @default(cuid())
+  name             String
+  key              String    @unique
+  rateLimit        Int       @default(1000) // requests per hour
+  tier             String    @default("free") // free, pro, enterprise
+  monthlyRateLimit Int       @default(1000) // overrides per-tier defaults
+  callsCount       Int       @default(0)
+  lastUsedAt       DateTime?
+  createdAt        DateTime  @default(now())
 }
 
 model Account {
@@ -178,4 +180,99 @@ model User {
 
   accounts Account[]
   sessions Session[]
+}
+
+model CommunityBoard {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String
+  icon        String                                        // emoji string
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  posts CommunityPost[]
+}
+
+model CommunityPost {
+  id          String   @id @default(cuid())
+  boardId     String
+  title       String
+  description String
+  author      String
+  startupName String?
+  tags        String[]
+  mrr         Int?                                          // in cents
+  upvotes     Int      @default(0)
+  sessionId   String?                                        // for voting dedup
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  board CommunityBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@index([boardId, createdAt])
+}
+
+model JobListing {
+  id          String    @id @default(cuid())
+  title       String
+  company     String
+  logo        String?
+  website     String?
+  location    String?                                      // nullable = remote
+  type        String    @default("full-time")              // full-time, part-time, contract, internship
+  salaryMin   Int?
+  salaryMax   Int?
+  currency    String    @default("USD")
+  description String
+  tags        String[]
+  category    String    @default("Engineering")            // Engineering, Design, Product, Marketing, Sales, Operations, Finance, Customer Success
+  isFeatured  Boolean   @default(false)
+  isPaid      Boolean   @default(false)
+  status      String    @default("active")                 // active, closed, expired
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model DigestSponsor {
+  id          String   @id @default(cuid())
+  companyName String
+  logo        String?
+  website     String
+  tagline     String?
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  status      String   @default("active") // active, paused, expired
+  startsAt    DateTime @default(now())
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model InvestorProfile {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  company   String?
+  website   String?
+  focus     String[]
+  stages    String[]
+  checkSize String?
+  bio       String?
+  status    String   @default("active") // active, paused
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+  id               String    @id @default(cuid())
+  userId           String?
+  email            String
+  plan             String    // "pro", "enterprise"
+  status           String    @default("active") // active, cancelled, expired, past_due
+  lemonSqueezyId   String?   @unique
+  currentPeriodEnd DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }

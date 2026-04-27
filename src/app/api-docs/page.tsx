@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 import {
   Key,
@@ -23,6 +24,12 @@ import {
   BookOpen,
   Globe,
   Clock,
+  CreditCard,
+  Users,
+  Headphones,
+  Webhook,
+  Info,
+  Star,
 } from 'lucide-react'
 
 /* ────────────── Types ────────────── */
@@ -327,12 +334,57 @@ const navSections = [
   { id: 'authentication', label: 'Authentication' },
   { id: 'rate-limits', label: 'Rate Limits' },
   { id: 'endpoints', label: 'Endpoints' },
+  { id: 'pricing', label: 'API Pricing' },
   { id: 'get-key', label: 'Get API Key' },
+]
+
+/* ────────────── Pricing Tiers ────────────── */
+const pricingTiers = [
+  {
+    name: 'Free',
+    price: '$0',
+    period: '/mo',
+    rateLimit: '1,000',
+    features: [
+      { icon: Zap, label: '1,000 req/hr' },
+      { icon: Users, label: 'Community support' },
+      { icon: Globe, label: 'Full API access' },
+    ],
+    tier: 'free',
+    highlighted: false,
+  },
+  {
+    name: 'Pro',
+    price: '$19',
+    period: '/mo',
+    rateLimit: '10,000',
+    features: [
+      { icon: Zap, label: '10,000 req/hr' },
+      { icon: Headphones, label: 'Priority support' },
+      { icon: Webhook, label: 'Webhook access' },
+    ],
+    tier: 'pro',
+    highlighted: true,
+  },
+  {
+    name: 'Enterprise',
+    price: '$99',
+    period: '/mo',
+    rateLimit: '100,000',
+    features: [
+      { icon: Zap, label: '100,000 req/hr' },
+      { icon: Headphones, label: 'Dedicated support' },
+      { icon: Shield, label: 'Custom SLA' },
+    ],
+    tier: 'enterprise',
+    highlighted: false,
+  },
 ]
 
 /* ────────────── Main Page ────────────── */
 export default function ApiDocsPage() {
   const [keyName, setKeyName] = useState('')
+  const [selectedTier, setSelectedTier] = useState('free')
   const [createdKey, setCreatedKey] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -348,7 +400,7 @@ export default function ApiDocsPage() {
       const res = await fetch('/api/v1/keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: keyName.trim() }),
+        body: JSON.stringify({ name: keyName.trim(), tier: selectedTier }),
       })
 
       const data = await res.json()
@@ -618,6 +670,66 @@ export default function ApiDocsPage() {
 
           <Separator className="bg-zinc-800" />
 
+          {/* API Pricing */}
+          <section id="pricing" className="scroll-mt-24">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <CreditCard className="w-5 h-5 text-amber-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-white">API Pricing</h2>
+            </div>
+            <p className="text-zinc-400 text-sm leading-relaxed mb-6">
+              Choose the plan that fits your needs. All tiers include access to the full API.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {pricingTiers.map((tier) => (
+                <Card
+                  key={tier.tier}
+                  className={`bg-zinc-900/50 border transition-colors ${
+                    tier.highlighted
+                      ? 'border-orange-500/50 ring-1 ring-orange-500/20 relative'
+                      : 'border-zinc-800/80 hover:border-zinc-700'
+                  }`}
+                >
+                  {tier.highlighted && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-orange-500 text-white text-[10px] px-2.5 py-0.5 font-bold">
+                        <Star className="w-3 h-3 mr-1" />Popular
+                      </Badge>
+                    </div>
+                  )}
+                  <CardHeader className="pt-6 pb-3 px-5">
+                    <CardTitle className="text-base text-white">{tier.name}</CardTitle>
+                    <div className="flex items-baseline gap-1 mt-1">
+                      <span className={`text-3xl font-bold ${tier.highlighted ? 'text-orange-400' : 'text-white'}`}>{tier.price}</span>
+                      <span className="text-zinc-500 text-sm">{tier.period}</span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="px-5 pb-5">
+                    <div className="space-y-3">
+                      {tier.features.map(({ icon: Icon, label }) => (
+                        <div key={label} className="flex items-center gap-2.5 text-sm">
+                          <Icon className={`w-4 h-4 shrink-0 ${tier.highlighted ? 'text-orange-400' : 'text-zinc-500'}`} />
+                          <span className="text-zinc-300">{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="mt-6 flex items-start gap-2.5 p-4 rounded-lg bg-zinc-900/50 border border-zinc-800/80">
+              <Info className="w-4 h-4 text-zinc-500 mt-0.5 shrink-0" />
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                All tiers start free. Upgrade anytime from your dashboard.
+              </p>
+            </div>
+          </section>
+
+          <Separator className="bg-zinc-800" />
+
           {/* Get API Key */}
           <section id="get-key" className="scroll-mt-24">
             <div className="flex items-center gap-3 mb-4">
@@ -637,63 +749,90 @@ export default function ApiDocsPage() {
                   Create API Key
                 </CardTitle>
                 <CardDescription className="text-zinc-500">
-                  Enter a name to identify this key (e.g. &quot;My Dashboard App&quot;).
+                  Enter a name and select a tier for your API key.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Input
-                    placeholder="Key name (e.g. My App)"
-                    value={keyName}
-                    onChange={(e) => setKeyName(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleCreateKey()}
-                    className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-600 max-w-xs"
-                    maxLength={50}
-                  />
-                  <Button
-                    onClick={handleCreateKey}
-                    disabled={isCreating || !keyName.trim()}
-                    className="bg-orange-500 hover:bg-orange-600 text-white font-semibold shrink-0"
-                  >
-                    {isCreating ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Creating...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <Zap className="w-4 h-4" />
-                        Generate Key
-                      </span>
-                    )}
-                  </Button>
-                </div>
-
-                {/* Show created key */}
-                {createdKey && (
-                  <div className="mt-6 p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <div>
-                        <p className="text-sm font-semibold text-emerald-400">API Key Created!</p>
-                        <p className="text-xs text-zinc-500 mt-0.5">
-                          Save this key now — it cannot be retrieved again.
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={copyKey}
-                        className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white shrink-0"
-                      >
-                        <Copy className="w-3.5 h-3.5 mr-1.5" />
-                        Copy
-                      </Button>
-                    </div>
-                    <pre className="bg-black/60 border border-white/5 rounded-md p-3 text-xs font-mono text-orange-400 overflow-x-auto select-all break-all">
-                      {createdKey}
-                    </pre>
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Input
+                      placeholder="Key name (e.g. My App)"
+                      value={keyName}
+                      onChange={(e) => setKeyName(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleCreateKey()}
+                      className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-600 max-w-xs"
+                      maxLength={50}
+                    />
+                    <Select value={selectedTier} onValueChange={setSelectedTier}>
+                      <SelectTrigger className="bg-zinc-800/50 border-zinc-700 text-white w-[160px]">
+                        <SelectValue placeholder="Select tier" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-zinc-800">
+                        <SelectItem value="free" className="text-zinc-300 focus:text-white focus:bg-zinc-800">
+                          Free
+                        </SelectItem>
+                        <SelectItem value="pro" className="text-zinc-300 focus:text-white focus:bg-zinc-800">
+                          Pro ($19/mo)
+                        </SelectItem>
+                        <SelectItem value="enterprise" className="text-zinc-300 focus:text-white focus:bg-zinc-800">
+                          Enterprise ($99/mo)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      onClick={handleCreateKey}
+                      disabled={isCreating || !keyName.trim()}
+                      className="bg-orange-500 hover:bg-orange-600 text-white font-semibold shrink-0"
+                    >
+                      {isCreating ? (
+                        <span className="flex items-center gap-2">
+                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Creating...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <Zap className="w-4 h-4" />
+                          Generate Key
+                        </span>
+                      )}
+                    </Button>
                   </div>
-                )}
+
+                  {(selectedTier === 'pro' || selectedTier === 'enterprise') && (
+                    <div className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                      <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                      <p className="text-sm text-amber-200/80 leading-relaxed">
+                        Payment required. Contact us to upgrade to the {selectedTier === 'pro' ? 'Pro' : 'Enterprise'} tier.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Show created key */}
+                  {createdKey && (
+                    <div className="p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div>
+                          <p className="text-sm font-semibold text-emerald-400">API Key Created!</p>
+                          <p className="text-xs text-zinc-500 mt-0.5">
+                            Save this key now — it cannot be retrieved again.
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={copyKey}
+                          className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white shrink-0"
+                        >
+                          <Copy className="w-3.5 h-3.5 mr-1.5" />
+                          Copy
+                        </Button>
+                      </div>
+                      <pre className="bg-black/60 border border-white/5 rounded-md p-3 text-xs font-mono text-orange-400 overflow-x-auto select-all break-all">
+                        {createdKey}
+                      </pre>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </section>

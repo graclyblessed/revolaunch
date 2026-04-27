@@ -42,15 +42,19 @@ export async function validateApiKey(request: Request): Promise<ApiAuthResult> {
     return { valid: false, error: 'Invalid API key' }
   }
 
-  // 3. Check rate limit — if lastUsedAt is within the last hour, use callsCount
+  // 3. Check rate limit — prefer monthlyRateLimit, fall back to rateLimit
+  const effectiveLimit = apiKey.monthlyRateLimit && apiKey.monthlyRateLimit > 0
+    ? apiKey.monthlyRateLimit
+    : apiKey.rateLimit
+
   const now = new Date()
   const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
 
   if (apiKey.lastUsedAt && apiKey.lastUsedAt > oneHourAgo) {
-    if (apiKey.callsCount >= apiKey.rateLimit) {
+    if (apiKey.callsCount >= effectiveLimit) {
       return {
         valid: false,
-        error: `Rate limit exceeded (${apiKey.rateLimit} requests per hour). Try again later.`,
+        error: `Rate limit exceeded (${effectiveLimit} requests per hour). Try again later.`,
       }
     }
   } else {

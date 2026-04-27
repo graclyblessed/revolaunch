@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { name, rateLimit } = body
+    const { name, rateLimit, tier: requestedTier } = body
 
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return apiResponse({ error: 'Name is required' }, 400)
@@ -61,13 +61,25 @@ export async function POST(request: Request) {
       return apiResponse({ error: 'Name must be 50 characters or fewer' }, 400)
     }
 
+    // Determine tier and rate limits
+    const validTiers = ['free', 'pro', 'enterprise'] as const
+    const tier = validTiers.includes(requestedTier) ? requestedTier : 'free'
+    const tierDefaults: Record<string, number> = {
+      free: 1000,
+      pro: 10000,
+      enterprise: 100000,
+    }
+    const monthlyRateLimit = tierDefaults[tier] || 1000
+
     const key = generateApiKey()
 
     const apiKey = await db.apiKey.create({
       data: {
         name: name.trim(),
         key,
-        rateLimit: typeof rateLimit === 'number' ? Math.min(10000, Math.max(1, rateLimit)) : 1000,
+        rateLimit: typeof rateLimit === 'number' ? Math.min(10000, Math.max(1, rateLimit)) : monthlyRateLimit,
+        tier,
+        monthlyRateLimit,
       },
     })
 
@@ -77,6 +89,8 @@ export async function POST(request: Request) {
       name: apiKey.name,
       key: apiKey.key,
       rateLimit: apiKey.rateLimit,
+      tier: apiKey.tier,
+      monthlyRateLimit: apiKey.monthlyRateLimit,
       createdAt: apiKey.createdAt.toISOString(),
       message: 'Save this key now — it cannot be retrieved again.',
     }, 201)

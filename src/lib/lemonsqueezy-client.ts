@@ -36,6 +36,13 @@ export const VARIANTS = {
   lifetime: process.env.LEMONSQUEEZY_VARIANT_LIFETIME || '',
 }
 
+// ─── Monthly Subscription Variants ───
+// Create these products in LemonSqueezy dashboard as "subscription" products
+export const SUBSCRIPTION_VARIANTS = {
+  pro: process.env.LEMONSQUEEZY_VARIANT_SUBSCRIPTION_PRO || '',
+  enterprise: process.env.LEMONSQUEEZY_VARIANT_SUBSCRIPTION_ENTERPRISE || '',
+}
+
 // ─── Tier to variant mapping ───
 export function getVariantForTier(tier: string): string {
   switch (tier) {
@@ -64,3 +71,12 @@ export function getCheckoutRedirectUrl(tier: string, startupName?: string): stri
 }
 
 export { createCheckout, getSubscription, getOrder }
+
+// ─── Subscription plan to variant mapping ───
+export function getVariantForSubscriptionPlan(plan: string): string {
+  switch (plan) {
+    case 'pro': return SUBSCRIPTION_VARIANTS.pro
+    case 'enterprise': return SUBSCRIPTION_VARIANTS.enterprise
+    default: return ''
+  }
+}

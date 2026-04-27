@@ -24,12 +24,62 @@ type DigestStartup = {
   votesCount: number
 }
 
+type DigestSponsor = {
+  id: string
+  companyName: string
+  logo: string | null
+  website: string
+  tagline: string | null
+}
+
+function buildSponsorBlockHtml(sponsors: DigestSponsor[], siteUrl: string): string {
+  if (sponsors.length === 0) return ''
+
+  const sponsorItems = sponsors.map((s) => `
+        <tr>
+          <td style="padding: 16px; border-bottom: 1px solid #1f1f1f;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td width="48" valign="top" style="padding-right: 14px;">
+                  ${s.logo
+                    ? `<img src="${s.logo}" alt="${s.companyName}" width="44" height="44" style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; display: block; border: 1px solid #1f1f1f;" />`
+                    : `<div style="width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(135deg, #f97316, #ea580c); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; line-height: 44px; text-align: center;">${s.companyName.charAt(0).toUpperCase()}</div>`
+                  }
+                </td>
+                <td valign="top">
+                  <div style="margin-bottom: 3px;">
+                    <span style="font-size: 14px; font-weight: 600; color: #ffffff;">${s.companyName}</span>
+                  </div>
+                  ${s.tagline ? `<div style="font-size: 12px; color: #737373; margin-bottom: 6px;">${s.tagline}</div>` : ''}
+                  <a href="${s.website}" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: #f97316; text-decoration: none; font-weight: 500;">Learn More &rarr;</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>`
+  ).join('')
+
+  return `
+          <!-- Sponsored Section -->
+          <tr>
+            <td style="padding: 24px 0 8px 0;">
+              <div style="text-align: center; margin-bottom: 12px;">
+                <span style="display: inline-block; font-size: 10px; color: #525252; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500;">&#x2728; Sponsored</span>
+              </div>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #111111; border-radius: 12px; border: 1px solid #1f1f1f; overflow: hidden;">
+                ${sponsorItems}
+              </table>
+            </td>
+          </tr>`
+}
+
 function buildDigestHtml(
   topStartups: DigestStartup[],
   newestStartups: DigestStartup[],
   stats: { totalStartups: number; totalVotes: number; totalSubscribers: number },
   unsubscribeUrl: string,
-  siteUrl: string
+  siteUrl: string,
+  sponsors: DigestSponsor[] = []
 ): string {
   const now = new Date()
   const weekLabel = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
@@ -154,6 +204,8 @@ function buildDigestHtml(
             </td>
           </tr>
 
+          ${buildSponsorBlockHtml(sponsors, siteUrl)}
+
           ${topStartups.length > 0 ? `
           <!-- Top Startups Section -->
           <tr>
@@ -227,6 +279,23 @@ async function sendDigestEmails(): Promise<{ sent: number; total: number; date: 
 
   if (!db) {
     throw new Error('Database not available')
+  }
+
+  // Fetch active digest sponsors
+  const activeSponsors = await db.digestSponsor.findMany({
+    where: {
+      status: 'active',
+      expiresAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  // Increment impressions for active sponsors
+  if (activeSponsors.length > 0) {
+    await db.digestSponsor.updateMany({
+      where: { id: { in: activeSponsors.map(s => s.id) } },
+      data: { impressions: { increment: 1 } },
+    })
   }
 
   const dbReady = await isDbAvailable()
@@ -306,7 +375,7 @@ async function sendDigestEmails(): Promise<{ sent: number; total: number; date: 
         from: FROM_EMAIL,
         to: [s.email],
         subject: `&#x1F680; Weekly Digest — Top Startups on Revolaunch`,
-        html: buildDigestHtml(topStartups, newestStartups, stats, unsubscribeUrl, siteUrl),
+        html: buildDigestHtml(topStartups, newestStartups, stats, unsubscribeUrl, siteUrl, activeSponsors),
         headers: {
           'List-Unsubscribe': `<${unsubscribeUrl}>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',

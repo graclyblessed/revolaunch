@@ -26,6 +26,9 @@ model Startup {
   upvotes     Int       @default(0)
   featured    Boolean   @default(false)
   launchTier      String    @default("free") // free, premium, premium-plus, seo-growth
+  founderName     String?
+  founderRole     String?
+  founderLinkedin String?
   badgeVerified    Boolean   @default(false)
   badgeVerifiedAt  DateTime?
   launchDate       DateTime?

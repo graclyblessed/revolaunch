@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { toast } from 'sonner'
 import {
   Check, X, ArrowLeft, Sparkles, Shield, TrendingUp,
   Headphones, ExternalLink, Clock, Globe, Search, Star,
@@ -52,17 +53,33 @@ export default function PricingPage() {
     }
 
     if (!isLemonSqueezyConfigured) {
-      // Demo mode
+      // Demo mode — proceed without payment
       window.location.href = `/submit?tier=${tier}`
       return
     }
 
+    // Production: call the billing API to create a LemonSqueezy checkout
     setLoading(tier)
-    // In production, this would call LemonSqueezy checkout
-    // For now, navigate to submit with tier pre-selected
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier }),
+      })
+      const data = await res.json()
+
+      if (data.checkoutUrl) {
+        // Redirect to LemonSqueezy hosted checkout
+        window.location.href = data.checkoutUrl
+        return
+      }
+
+      // Fallback: if no checkout URL returned (e.g. demo mode), go to submit
       window.location.href = `/submit?tier=${tier}`
-    }, 500)
+    } catch {
+      toast.error('Failed to start checkout. Please try again.')
+      setLoading(null)
+    }
   }
 
   return (

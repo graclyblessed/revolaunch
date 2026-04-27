@@ -4,11 +4,20 @@ import { motion } from 'framer-motion'
 import { Rocket } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 
 function LoginContent() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
+  const [csrfToken, setCsrfToken] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/auth/csrf')
+      .then(res => res.json())
+      .then(data => { setCsrfToken(data.csrfToken || ''); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -42,11 +51,12 @@ function LoginContent() {
           >
             {/* Google button */}
             <form action={`/api/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`} method="POST">
-              <input type="hidden" name="csrfToken" value="" />
+              <input type="hidden" name="csrfToken" value={csrfToken} />
               <input type="hidden" name="callbackUrl" value={callbackUrl} />
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-3 h-11 rounded-xl border border-border bg-background hover:bg-muted/50 text-foreground text-sm font-medium transition-colors cursor-pointer"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 h-11 rounded-xl border border-border bg-background hover:bg-muted/50 text-foreground text-sm font-medium transition-colors cursor-pointer disabled:opacity-50"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
@@ -66,7 +76,7 @@ function LoginContent() {
                     fill="#EA4335"
                   />
                 </svg>
-                Continue with Google
+                {loading ? 'Loading...' : 'Continue with Google'}
               </button>
             </form>
 
@@ -82,11 +92,12 @@ function LoginContent() {
 
             {/* GitHub button */}
             <form action={`/api/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`} method="POST">
-              <input type="hidden" name="csrfToken" value="" />
+              <input type="hidden" name="csrfToken" value={csrfToken} />
               <input type="hidden" name="callbackUrl" value={callbackUrl} />
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-3 h-11 rounded-xl bg-foreground text-background hover:bg-foreground/90 text-sm font-medium transition-colors cursor-pointer"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 h-11 rounded-xl bg-foreground text-background hover:bg-foreground/90 text-sm font-medium transition-colors cursor-pointer disabled:opacity-50"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path
@@ -95,7 +106,7 @@ function LoginContent() {
                     clipRule="evenodd"
                   />
                 </svg>
-                Continue with GitHub
+                {loading ? 'Loading...' : 'Continue with GitHub'}
               </button>
             </form>
           </motion.div>

@@ -218,6 +218,9 @@ function SubmitPageContent() {
           country: startup.country,
           email: startup.email,
           twitter: profile.twitter || null,
+          linkedin: profile.linkedin || null,
+          founderName: `${profile.firstName} ${profile.lastName}`.trim(),
+          founderRole: profile.role || null,
           tier: selectedTier,
         }),
       })

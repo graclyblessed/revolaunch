@@ -2,11 +2,23 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@revolaunch.net'
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'revolaunch-admin-2025'
+const _defaultAdminEmail = 'admin@revolaunch.net'
+const _defaultAdminPassword = 'revolaunch-admin-2025'
+const _defaultJwtSecret = 'revolaunch-admin-jwt-secret-change-in-production'
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || _defaultAdminEmail
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || _defaultAdminPassword
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.ADMIN_JWT_SECRET || 'revolaunch-admin-jwt-secret-change-in-production'
+  process.env.ADMIN_JWT_SECRET || _defaultJwtSecret
 )
+
+// Warn if running with default credentials
+if (process.env.NODE_ENV === 'production' && !process.env.ADMIN_PASSWORD) {
+  console.warn('[SECURITY WARNING] ADMIN_PASSWORD is not set. Using default value. Set ADMIN_PASSWORD env var in production!')
+}
+if (process.env.NODE_ENV === 'production' && !process.env.ADMIN_JWT_SECRET) {
+  console.warn('[SECURITY WARNING] ADMIN_JWT_SECRET is not set. Using default value. Set ADMIN_JWT_SECRET env var in production!')
+}
 
 export interface AdminSession {
   email: string
@@ -47,9 +59,8 @@ export function isAdminPath(pathname: string): boolean {
   return pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')
 }
 
-export function getAdminFromRequest(request: NextRequest): AdminSession | null {
+export async function getAdminFromRequest(request: NextRequest): Promise<AdminSession | null> {
   const token = request.cookies.get('admin_token')?.value
   if (!token) return null
-  // We'll verify in middleware using a sync-compatible approach
-  return null // Actual verification happens in the API routes
+  return verifyAdminToken(token)
 }

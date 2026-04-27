@@ -6,7 +6,11 @@ import { db, isDbAvailable } from '@/lib/db'
 let lastDigestSend: { sent: number; total: number; date: string } | null = null
 
 function getDigestSecret(): string {
-  return process.env.DIGEST_SECRET || 'revolaunch-digest-2026'
+  const secret = process.env.DIGEST_SECRET || 'revolaunch-digest-2026'
+  if (process.env.NODE_ENV === 'production' && !process.env.DIGEST_SECRET) {
+    console.warn('[SECURITY WARNING] DIGEST_SECRET is not set. Using default value. Set DIGEST_SECRET env var in production!')
+  }
+  return secret
 }
 
 type DigestStartup = {

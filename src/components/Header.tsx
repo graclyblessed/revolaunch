@@ -21,8 +21,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import ThemeToggle from './ThemeToggle'
 
 const communityItems = [
-  { name: 'Weekly Board', icon: TrendingUp, href: '/community?type=weekly-board' },
-  { name: 'MRR Board', icon: BarChart3, href: '/community?type=mrr-board' },
+  { name: 'Weekly Board', icon: TrendingUp, href: '/community?type=weekly' },
+  { name: 'MRR Board', icon: BarChart3, href: '/community?type=mrr' },
   { name: 'Raising Capital', icon: Handshake, href: '/community?type=raising-capital' },
 ]
 

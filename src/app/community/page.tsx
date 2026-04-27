@@ -66,7 +66,7 @@ function formatMrr(mrrCents: number | undefined): string {
 function CommunityContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const activeBoardId = searchParams.get('type') || 'weekly-board'
+  const activeBoardId = searchParams.get('type') || 'weekly'
   const [sortBy, setSortBy] = useState<'newest' | 'popular'>('popular')
 
   // Data state

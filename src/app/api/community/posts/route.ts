@@ -7,7 +7,7 @@ import { fallbackCommunityBoards } from '@/lib/fallback-data'
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const board = searchParams.get('board') || 'weekly-board'
+    const board = searchParams.get('board') || 'weekly'
     const sort = searchParams.get('sort') || 'popular'
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')

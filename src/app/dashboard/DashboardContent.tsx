@@ -58,8 +58,8 @@ const sidebarItems = [
 
 // ─── Quick board links ───
 const quickBoards = [
-  { name: 'Weekly Board', icon: '🏆', href: '/community?type=weekly-board' },
-  { name: 'MRR Board', icon: '📊', href: '/community?type=mrr-board' },
+  { name: 'Weekly Board', icon: '🏆', href: '/community?type=weekly' },
+  { name: 'MRR Board', icon: '📊', href: '/community?type=mrr' },
 ]
 
 // ─── Animation variants ───
@@ -138,7 +138,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
       {/* Quick actions */}
       <div className="flex flex-wrap gap-2">
         <Link href="/submit"><Button className="bg-orange-500 hover:bg-orange-600 text-white text-xs h-8 rounded-lg"><Plus className="w-3.5 h-3.5 mr-1.5" />Add Startup</Button></Link>
-        <Link href="/community?type=weekly-board"><Button variant="outline" className="text-xs h-8 rounded-lg"><Trophy className="w-3.5 h-3.5 mr-1.5" />Leaderboard</Button></Link>
+        <Link href="/community?type=weekly"><Button variant="outline" className="text-xs h-8 rounded-lg"><Trophy className="w-3.5 h-3.5 mr-1.5" />Leaderboard</Button></Link>
         <Link href="/startups"><Button variant="outline" className="text-xs h-8 rounded-lg"><TrendingUp className="w-3.5 h-3.5 mr-1.5" />Browse Startups</Button></Link>
       </div>
 

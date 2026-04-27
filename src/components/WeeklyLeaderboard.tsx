@@ -94,7 +94,7 @@ export default function WeeklyLeaderboard({ winners }: WeeklyLeaderboardProps) {
 
       <div className="p-3 border-t subtle-border">
         <a
-          href="/community?type=weekly-board"
+          href="/community?type=weekly"
           className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-blue-500 transition-colors"
         >
           <Trophy className="w-3 h-3" />

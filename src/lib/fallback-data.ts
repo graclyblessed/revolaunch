@@ -1456,7 +1456,7 @@ export interface CommunityBoardItem {
 
 export const fallbackCommunityBoards: CommunityBoard[] = [
   {
-    id: 'mrr-board',
+    id: 'mrr',
     name: 'MRR Board',
     description: 'Share your monthly recurring revenue milestones',
     icon: '📊',
@@ -1510,8 +1510,8 @@ export const fallbackCommunityBoards: CommunityBoard[] = [
     ],
   },
   {
-    id: 'weekly-board',
-    name: 'Weekly Board',
+    id: 'weekly',
+    name: 'Weekly Wins',
     description: 'Track your weekly progress and compete for top rankings',
     icon: '🏆',
     itemCount: 1420,
@@ -1582,7 +1582,7 @@ export const fallbackCommunityBoards: CommunityBoard[] = [
     ],
   },
   {
-    id: 'job-board',
+    id: 'jobs',
     name: 'Job Board',
     description: 'Find and post jobs at the most innovative startups',
     icon: '💼',
@@ -1591,7 +1591,7 @@ export const fallbackCommunityBoards: CommunityBoard[] = [
     items: [],
   },
   {
-    id: 'open-to-acquisition',
+    id: 'open-acquisition',
     name: 'Open to Acquisition',
     description: 'Startups open to being acquired',
     icon: '🤝',

@@ -1,11 +1,13 @@
 /**
  * Comprehensive website scraper for startup auto-enrichment.
- * Extracts: OG image (logo), Twitter handle, LinkedIn URL, description, favicon.
+ * Extracts: Twitter handle, LinkedIn URL, description, favicon.
+ * Note: og:image is NOT used as logo (it's a social preview, often a screenshot).
+ *       Logo display is handled client-side via Clearbit + Google Favicon fallbacks.
  * Never throws — always returns partial data on errors.
  */
 
 export interface ScrapedData {
-  logo?: string | null       // OG image URL
+  logo?: string | null       // Always null — logos are handled client-side via Clearbit
   twitter?: string | null    // Twitter handle (e.g. "@revolaunch" or full URL)
   linkedin?: string | null   // Full LinkedIn company URL
   description?: string | null// Meta description
@@ -175,14 +177,11 @@ export async function scrapeStartup(url: string): Promise<ScrapedData> {
     tagline = tagline.replace(/\s*[|\-–—]\s*(Home|Homepage|Welcome|Log in|Sign up).*/i, '').trim()
     tagline = tagline.replace(/\s*[|\-–—]\s*$/, '').trim()
 
-    // Logo from og:image
-    let logo = extractMeta(html, 'property', 'og:image')
-    // Also try og:image:url
-    if (!logo) logo = extractMeta(html, 'property', 'og:image:url')
-    // Resolve relative URLs
-    if (logo) logo = resolveUrl(normalizedUrl, logo)
-    // Filter out very small or data URIs (likely tracking pixels)
-    if (logo && (logo.startsWith('data:') || logo.length < 10)) logo = null
+    // Logo: intentionally NOT extracted from og:image.
+    // og:image is a social sharing preview (often a screenshot/banner), NOT a company logo.
+    // Logo display is handled client-side via Clearbit (logo.clearbit.com) and Google Favicon.
+    // Storing og:image as "logo" causes screenshots to display instead of actual logos.
+    const logo = null
 
     // Favicon
     let favicon: string | null = null
@@ -265,7 +264,7 @@ export async function scrapeStartup(url: string): Promise<ScrapedData> {
     }
 
     return {
-      logo: logo || null,
+      logo: null,
       twitter: twitter || null,
       linkedin: linkedin || null,
       description: description || null,

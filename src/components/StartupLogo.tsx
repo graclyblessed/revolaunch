@@ -42,10 +42,29 @@ export function getGoogleFaviconUrl(website: string): string | null {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
 }
 
+/**
+ * Check if a stored logo URL looks like an og:image screenshot rather than a real logo.
+ * og:image URLs often come from CDNs and contain paths like /og, /opengraph, /preview, /hero, etc.
+ * Clearbit logos always come from logo.clearbit.com and are actual company logos.
+ */
+function isLikelyOgImage(url: string): boolean {
+  // Clearbit and Google Favicon are always real logos
+  if (url.includes('clearbit.com') || url.includes('google.com/s2/favicons')) return false
+  // Common og:image patterns that indicate screenshots/banners
+  const ogPatterns = [/\/og[_-]?/, /opengraph/i, /\/preview/i, /\/hero/i, /\/banner/i, /\/screenshot/i, /\.png\?.*width=/i, /\/social/i, /image\.uploadcare\./i, /cdn-images/i, /unsplash/i, /\/assets\/(?!logo)/i]
+  return ogPatterns.some(p => p.test(url))
+}
+
 function buildLogoUrls(logo: string | null | undefined, website: string | undefined): string[] {
   const urls: string[] = []
-  const clearbitUrl = logo || (website ? getClearbitLogoUrl(website) : null)
+  // Always prefer Clearbit (actual company logos) over stored og:image URLs
+  const clearbitUrl = website ? getClearbitLogoUrl(website) : null
   if (clearbitUrl) urls.push(clearbitUrl)
+  // Only include stored logo if it doesn't look like an og:image screenshot
+  if (logo && logo !== clearbitUrl && !isLikelyOgImage(logo)) {
+    urls.push(logo)
+  }
+  // Fallback to Google Favicon
   const faviconUrl = website ? getGoogleFaviconUrl(website) : null
   if (faviconUrl && faviconUrl !== clearbitUrl) urls.push(faviconUrl)
   return urls

@@ -106,6 +106,74 @@ export async function GET(request: Request) {
   }
 }
 
+// ─── URL & Submission Validation ───
+
+/** Blocked/spam TLDs and domains */
+const BLOCKED_TLDS = ['.xyz', '.top', '.click', '.buzz', '.surf', '.monster', '.icu', '.club', '.work', '.info', '.biz', '.online', '.site', '.space', '.website', '.tech', '.cc', '.tk', '.ml', '.ga', '.cf']
+const BLOCKED_DOMAINS = ['mexty.fr', 'stellaflow.io']
+
+/** List of well-known free hosting / link-in-bio platforms */
+const FREE_HOSTING_DOMAINS = [
+  'github.io', 'gitlab.io', 'vercel.app', 'netlify.app', 'herokuapp.com',
+  'wordpress.com', 'blogspot.com', 'medium.com', 'wixsite.com', 'squarespace.com',
+  'notion.site', 'carrd.co', 'linktr.ee', 'bio.link', 'myportfolio.com',
+]
+
+/** Normalize a URL and extract its hostname */
+function normalizeAndParseUrl(raw: string): { normalized: string; hostname: string } | null {
+  try {
+    let url = raw.trim()
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url
+    }
+    const parsed = new URL(url)
+    // Reject URLs with paths that look like deep links (e.g., /nav3/entree.htm)
+    const pathParts = parsed.pathname.split('/').filter(Boolean)
+    if (pathParts.length > 2) return null
+    if (pathParts.some(p => p.includes('.')) && !pathParts[pathParts.length - 1].match(/^(index|home|app)?(\.html?)?$/i)) {
+      return null
+    }
+    return { normalized: url, hostname: parsed.hostname.replace(/^www\./, '') }
+  } catch {
+    return null
+  }
+}
+
+/** Validate that a website URL looks legitimate */
+function isValidStartupUrl(raw: string): { valid: boolean; error?: string } {
+  const parsed = normalizeAndParseUrl(raw)
+  if (!parsed) return { valid: false, error: 'Please provide a valid startup homepage URL (not a deep link or file path).' }
+
+  const { normalized, hostname } = parsed
+
+  // Check blocked TLDs
+  if (BLOCKED_TLDS.some(tld => hostname.endsWith(tld))) {
+    return { valid: false, error: 'This domain extension is not allowed. Please use a standard domain (.com, .io, .co, .dev, etc.).' }
+  }
+
+  // Check blocked domains
+  if (BLOCKED_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d))) {
+    return { valid: false, error: 'This domain has been flagged and cannot be listed.' }
+  }
+
+  // Check free hosting
+  if (FREE_HOSTING_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d))) {
+    return { valid: false, error: 'Custom domains are required. Free hosting platforms (GitHub Pages, Vercel, etc.) are not accepted. Please use your own domain.' }
+  }
+
+  // Require a real domain (not an IP address)
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) {
+    return { valid: false, error: 'Please use a domain name, not an IP address.' }
+  }
+
+  return { valid: true }
+}
+
+/** Basic email validation */
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)
+}
+
 // POST /api/startups — Submit a new startup (uses DB)
 export async function POST(request: Request) {
   try {
@@ -127,8 +195,44 @@ export async function POST(request: Request) {
       )
     }
 
+    // ─── URL validation ───
+    const urlCheck = isValidStartupUrl(website)
+    if (!urlCheck.valid) {
+      return NextResponse.json({ error: urlCheck.error }, { status: 400 })
+    }
+
+    // ─── Email validation (required for submission) ───
+    if (!email || !isValidEmail(email)) {
+      return NextResponse.json(
+        { error: 'A valid contact email is required to submit a startup.' },
+        { status: 400 }
+      )
+    }
+
+    // ─── Name validation ───
+    const trimmedName = name.trim()
+    if (trimmedName.length < 2 || trimmedName.length > 60) {
+      return NextResponse.json(
+        { error: 'Startup name must be between 2 and 60 characters.' },
+        { status: 400 }
+      )
+    }
+
+    // ─── Tagline validation ───
+    const trimmedTagline = tagline.trim()
+    if (trimmedTagline.length < 10 || trimmedTagline.length > 200) {
+      return NextResponse.json(
+        { error: 'Tagline must be between 10 and 200 characters.' },
+        { status: 400 }
+      )
+    }
+
+    // Normalize the website URL
+    const parsedUrl = normalizeAndParseUrl(website)!
+    const normalizedWebsite = parsedUrl.normalized
+
     // Generate slug from name
-    const slug = name
+    const slug = trimmedName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '')
@@ -144,12 +248,12 @@ export async function POST(request: Request) {
 
     const startup = await db.startup.create({
       data: {
-        name,
+        name: trimmedName,
         slug,
-        tagline,
+        tagline: trimmedTagline,
         description: description || null,
         logo: null,
-        website,
+        website: normalizedWebsite,
         twitter: twitter || null,
         linkedin: linkedin || null,
         category,
@@ -157,7 +261,7 @@ export async function POST(request: Request) {
         teamSize: teamSize || '1-5',
         foundedYear: foundedYear ? parseInt(foundedYear, 10) : null,
         country: country || null,
-        email: email || null,
+        email: email.trim(),
         launchTier: tier || 'free',
       },
       include: {
@@ -165,38 +269,36 @@ export async function POST(request: Request) {
       },
     })
 
-    // Send confirmation email if email provided
-    if (email) {
-      try {
-        const { isResendConfigured, resend, FROM_EMAIL, SITE_URL } = await import('@/lib/resend')
-        if (isResendConfigured()) {
-          const SubmissionConfirmationEmail = (await import('@/emails/SubmissionConfirmationEmail')).default
-          await resend.emails.send({
-            from: FROM_EMAIL,
-            to: [email],
-            subject: `${name} is live on Revolaunch!`,
-            react: SubmissionConfirmationEmail({
-              startupName: name,
-              tagline,
-              tier: tier || 'free',
-              siteUrl: SITE_URL,
-            }),
-          })
-          console.log(`[Submit] Confirmation email sent to ${email}`)
-        }
-      } catch (emailErr) {
-        // Don't fail the submission if email fails
-        console.warn('[Submit] Failed to send confirmation email:', emailErr)
+    // Send confirmation email
+    try {
+      const { isResendConfigured, resend, FROM_EMAIL, SITE_URL } = await import('@/lib/resend')
+      if (isResendConfigured()) {
+        const SubmissionConfirmationEmail = (await import('@/emails/SubmissionConfirmationEmail')).default
+        await resend.emails.send({
+          from: FROM_EMAIL,
+          to: [email],
+          subject: `${trimmedName} is live on Revolaunch!`,
+          react: SubmissionConfirmationEmail({
+            startupName: trimmedName,
+            tagline: trimmedTagline,
+            tier: tier || 'free',
+            siteUrl: SITE_URL,
+          }),
+        })
+        console.log(`[Submit] Confirmation email sent to ${email}`)
       }
+    } catch (emailErr) {
+      // Don't fail the submission if email fails
+      console.warn('[Submit] Failed to send confirmation email:', emailErr)
     }
 
     // Auto-enrich in the background (fire-and-forget — don't block the response)
-    if (website) {
+    if (normalizedWebsite) {
       // Use setImmediate-like approach with a microtask so we return immediately
       ;(async () => {
         try {
           const { scrapeStartup } = await import('@/lib/scrape')
-          const scraped = await scrapeStartup(website)
+          const scraped = await scrapeStartup(normalizedWebsite)
 
           const updateData: Record<string, any> = {}
           if (scraped.logo) updateData.logo = scraped.logo
@@ -213,11 +315,11 @@ export async function POST(request: Request) {
               where: { slug },
               data: updateData,
             })
-            console.log(`[AutoEnrich] Updated ${name}: ${Object.keys(updateData).join(', ')}`)
+            console.log(`[AutoEnrich] Updated ${trimmedName}: ${Object.keys(updateData).join(', ')}`)
           }
         } catch (err) {
           // Auto-enrichment failure should never affect the user experience
-          console.warn(`[AutoEnrich] Background enrichment failed for ${name}:`, err)
+          console.warn(`[AutoEnrich] Background enrichment failed for ${trimmedName}:`, err)
         }
       })()
     }
